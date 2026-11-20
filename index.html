@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Intégra’Quest – Les couches d’intégration expliquées aux débutants</title>
+<style>
+/* ===== 1. Thème ===== */
+:root{--fs:17px;--bg:#f4f6fb;--card:#fff;--ink:#1b2333;--muted:#4b5563;--line:#d6dbe6;--pri:#3f3cbb;--pri-soft:#ecebff;--ok:#146c2e;--ok-bg:#e3f6e8;--ko:#b42318;--ko-bg:#fdecea;--info-bg:#eef4ff;--warn-bg:#fff4d6;--bt:#6d3fc0;--ip:#c2410c}
+html{font-size:var(--fs)}html.big{--fs:20px}
+html.contrast{--bg:#fff;--ink:#000;--muted:#000;--line:#000;--pri:#1a0dab;--ok:#005c00;--ko:#a00000}
+html.contrast header.top{background:#000}
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:var(--ink);line-height:1.6}
+h3{margin:1.2rem 0 .5rem}
+code{background:#eef0f6;padding:.05rem .35rem;border-radius:5px;color:#1b2333}
+pre{background:#111827;color:#e5e7eb;padding:.8rem 1rem;border-radius:12px;overflow-x:auto;font-size:.85rem;line-height:1.5;white-space:pre}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:.95rem}
+th,td{border:1px solid var(--line);padding:.5rem .7rem;text-align:left;vertical-align:top}
+thead th,tbody th{background:#f3f4f8;color:#1b2333}
+.sr-only{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.skip{position:absolute;left:-9999px;top:.5rem;background:#fff;color:var(--pri);padding:.6rem 1rem;border-radius:8px;z-index:200;font-weight:700}.skip:focus{left:.5rem}
+/* ===== 2. En-tête ===== */
+header.top{background:var(--pri);color:#fff}
+.top-in{max-width:1150px;margin:auto;display:flex;align-items:center;gap:.45rem;padding:.7rem 1rem;flex-wrap:wrap}
+.logo{font-weight:800;font-size:1.15rem;margin-right:auto;cursor:pointer;user-select:none}
+.logo small{font-weight:500;opacity:.9}
+.pill{background:rgba(255,255,255,.18);border-radius:99px;padding:.3rem .8rem;font-weight:700;font-size:.92rem;display:inline-block}
+.hbtn{font:inherit;background:#fff;color:var(--pri);border:0;border-radius:99px;padding:.35rem .8rem;font-weight:700;cursor:pointer;min-height:40px;font-size:.9rem}
+.prog-row{max-width:1150px;margin:auto;padding:0 1rem .8rem;display:flex;align-items:center;gap:.7rem;font-size:.88rem;font-weight:600}
+.progress{flex:1;height:10px;background:rgba(255,255,255,.3);border-radius:99px;overflow:hidden}
+.progress>div{height:100%;width:0;background:#fff;transition:width .4s}
+.bump{animation:bump .5s}@keyframes bump{50%{transform:scale(1.2)}}
+/* ===== 3. Mise en page ===== */
+.layout{max-width:1150px;margin:1rem auto;display:grid;grid-template-columns:270px 1fr;gap:1rem;padding:0 1rem 2rem}
+nav.chapters ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:.45rem}
+.chap{font:inherit;width:100%;display:flex;gap:.6rem;align-items:center;text-align:left;background:var(--card);border:2px solid var(--line);border-radius:12px;padding:.55rem .7rem;color:var(--ink);font-size:.92rem;cursor:pointer}
+.chap small{color:var(--muted)}.chap.cur{border-color:var(--pri);background:var(--pri-soft);font-weight:700}
+.chap[aria-disabled="true"]{opacity:.65;cursor:not-allowed}.ci{font-size:1.35rem;flex:none}
+main.card{background:var(--card);border-radius:18px;box-shadow:0 6px 24px rgba(20,30,60,.08);padding:1.5rem;min-width:0}main.card:focus{outline:none}
+.eyebrow{color:var(--muted);font-weight:600;font-size:.88rem;margin:0}
+#stepTitle{font-size:1.6rem;margin:.2rem 0 1rem;line-height:1.25}
+/* ===== 4. Mascotte Plug (déplaçable) ===== */
+.guide{display:flex;gap:.8rem;align-items:center;background:var(--pri-soft);border:2px solid #c9c6ff;border-radius:16px;padding:.6rem 1rem;margin-bottom:1rem}
+.guide p{margin:0}
+.plug{background:none;border:0;padding:0;cursor:grab;flex:none;touch-action:none;user-select:none;-webkit-user-select:none}
+.plug svg{width:56px;height:64px;animation:bob 3s ease-in-out infinite;display:block;pointer-events:none}
+.flyplug{position:fixed;z-index:350;width:56px;height:64px;cursor:grabbing;touch-action:none;user-select:none;-webkit-user-select:none;filter:drop-shadow(0 6px 8px rgba(0,0,0,.3))}
+.flyplug svg{width:56px;height:64px;display:block;pointer-events:none}
+@keyframes bob{50%{transform:translateY(-4px)}}
+.guide.happy svg{animation:jump .5s 2}.guide.sad svg{animation:tilt .6s}.guide.party svg{animation:spin 1s}
+@keyframes jump{50%{transform:translateY(-16px)}}@keyframes tilt{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}@keyframes spin{to{transform:rotate(360deg)}}
+/* Easter eggs : disco et saut */
+html.disco .plug svg,html.disco .flyplug svg{animation:dance .45s ease-in-out infinite}
+html.disco header.top{animation:hue 1.2s linear infinite}
+html.jumpy .plug svg,html.jumpy .flyplug svg{animation:jump .35s 8}
+@keyframes dance{0%,100%{transform:rotate(-15deg)}50%{transform:rotate(15deg) translateY(-10px)}}
+@keyframes hue{to{filter:hue-rotate(360deg)}}
+/* ===== 5. Boutons et blocs ===== */
+.btn{font:inherit;border:2px solid transparent;border-radius:12px;padding:.55rem 1.1rem;font-weight:700;background:#e6e9f2;color:#1b2333;cursor:pointer;min-height:44px}
+.btn:hover:not(:disabled){filter:brightness(.95)}.btn.pri{background:var(--pri);color:#fff}
+.btn.sm{padding:.35rem .8rem;font-size:.92rem;min-height:40px}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn[aria-pressed="true"]{outline:3px solid var(--pri);outline-offset:1px;background:var(--pri-soft)}
+.navrow{display:flex;gap:.8rem;align-items:center;margin-top:1.6rem;border-top:1px solid var(--line);padding-top:1rem;flex-wrap:wrap}
+.hint{flex:1;color:var(--muted);font-size:.9rem;text-align:right}
+.row{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center;margin-top:.6rem}.muted{color:var(--muted)}
+.key{background:var(--pri-soft);border-left:6px solid var(--pri);padding:.7rem 1rem;border-radius:10px;margin:1rem 0}
+.news{background:var(--warn-bg);border-left:6px solid #b45309;padding:.7rem 1rem;border-radius:10px;margin:1rem 0}
+.example{background:#f7f8fc;border:2px dashed var(--line);border-radius:12px;padding:.7rem 1rem;margin:1rem 0}
+.term{font:inherit;background:none;border:0;padding:0;color:var(--pri);font-weight:700;border-bottom:2px dotted var(--pri);cursor:help}.term:hover{background:var(--pri-soft)}
+.missions{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem;list-style:none;padding:0}
+.missions li{background:#f7f8fc;border:2px solid var(--line);border-radius:12px;padding:.7rem;text-align:center;font-size:.93rem}.mi{font-size:1.8rem;display:block}
+.codes{display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem}.code{border-radius:12px;padding:.6rem .8rem;font-size:.93rem;color:#1b2333}
+.c2{background:#e3f6e8}.c4{background:#fff4d6}.c5{background:#fdecea}
+/* ===== 6. Schémas ===== */
+figure.schema{margin:1rem 0;background:#fafbff;border:2px solid var(--line);border-radius:14px;padding:.8rem;text-align:center}
+figure.schema svg{width:100%;max-width:540px;height:auto}
+figcaption{color:var(--muted);font-size:.92rem;margin-top:.4rem}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.mapviz{display:grid;grid-template-columns:1fr auto 1fr;gap:.6rem;align-items:center;text-align:left}
+.big-arrow{font-size:2rem;color:var(--pri);text-align:center}
+input[type=range]{width:100%;max-width:380px;accent-color:var(--pri)}
+.dot{animation:moveR 2.6s ease-in-out infinite}.dot.back{animation-name:moveL}.dot.r100{animation-name:moveR100}
+@keyframes moveR{0%{transform:translateX(0);opacity:0}10%{opacity:1}50%,100%{transform:translateX(136px);opacity:0}}
+@keyframes moveL{0%,50%{transform:translateX(0);opacity:0}60%{opacity:1}100%{transform:translateX(-136px);opacity:0}}
+@keyframes moveR100{0%{transform:translateX(0);opacity:0}10%{opacity:1}70%,100%{transform:translateX(94px);opacity:0}}
+/* Schéma BizTalk (chapitre 5) */
+.bt-scene{display:flex;flex-direction:column;gap:.45rem;margin:1rem 0}
+.bt-end{display:flex;gap:.7rem;align-items:center;background:#f7f8fc;border:2px solid var(--line);border-radius:14px;padding:.6rem .9rem}
+.bt-end.ok{background:var(--ok-bg);border-color:var(--ok)}.bt-end .pi{font-size:1.8rem}
+.bt-link{align-self:center;font-weight:700;color:var(--bt);font-size:.92rem;background:#f5f1ff;border-radius:99px;padding:.2rem .9rem}
+.bt-frame{border:3px solid var(--bt);border-radius:18px;padding:.7rem;background:#faf7ff}
+.bt-title{font-weight:800;color:var(--bt);margin:0 0 .4rem;font-size:1.05rem}
+.bt-head{display:grid;grid-template-columns:minmax(190px,1fr) 1.3fr;gap:.5rem;font-size:.8rem;font-weight:700;color:var(--muted);text-transform:uppercase;padding:0 .5rem}
+.bt-list{list-style:none;margin:0;padding:0;display:grid;gap:1rem}
+.bts{display:grid;grid-template-columns:minmax(190px,1fr) 1.3fr;gap:.5rem;border:2px solid #d9ccff;border-radius:14px;padding:.5rem;background:#fff;position:relative}
+.bts:not(:last-child)::after{content:"⬇";position:absolute;left:1.6rem;bottom:-1.15rem;color:var(--bt);font-weight:800}
+.bts.seen{border-color:var(--bt)}.bts.live{box-shadow:0 0 0 4px #c4b5fd}
+.bts-btn{font:inherit;display:flex;gap:.5rem;align-items:center;text-align:left;background:#f5f1ff;border:0;border-radius:10px;padding:.5rem;cursor:pointer;color:#1b2333}
+.bts-btn small{color:#4b5563}.bts-btn[aria-expanded="true"]{background:var(--bt);color:#fff}.bts-btn[aria-expanded="true"] small{color:#ede9fe}
+.num{flex:none;width:1.7rem;height:1.7rem;border-radius:50%;background:var(--bt);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.bts-btn[aria-expanded="true"] .num{background:#fff;color:var(--bt)}.bts .pi{font-size:1.5rem}
+.bts-msg{font-size:.88rem;background:#f8fafc;border:1px solid var(--line);border-radius:10px;padding:.45rem .65rem}
+.bts-msg pre{margin:.3rem 0;font-size:.76rem;padding:.4rem .6rem}
+.bts-detail{grid-column:1/-1;background:var(--info-bg);border-radius:10px;padding:.3rem .8rem}
+.counter{font-weight:700;color:var(--bt)}
+/* ===== 7. Questions, retours, effets ===== */
+.q{font-weight:700;font-size:1.1rem}.opts{display:grid;gap:.6rem;margin:.8rem 0}
+.opt{font:inherit;text-align:left;display:flex;gap:.7rem;align-items:center;flex-wrap:wrap;background:#f7f8fc;border:2px solid var(--line);border-radius:12px;padding:.7rem .9rem;color:#1b2333;cursor:pointer;min-height:48px}
+.opt:hover:not(:disabled){border-color:var(--pri);background:var(--pri-soft)}.opt:disabled{cursor:default}
+.letter{flex:none;width:1.9rem;height:1.9rem;border-radius:50%;background:var(--pri);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800}
+.otext{flex:1}.mark{font-weight:800;font-size:.86rem}
+.opt.right{border-color:var(--ok);background:var(--ok-bg)}.opt.right .mark{color:var(--ok)}
+.opt.wrong{border-color:var(--ko);background:var(--ko-bg)}.opt.wrong .mark{color:var(--ko)}
+.fb{margin-top:.8rem}.fb.show{border-radius:12px;padding:.8rem 1rem;border-left:6px solid;animation:pop .3s}
+.fb.ok{background:var(--ok-bg);border-color:var(--ok)}.fb.ko{background:var(--ko-bg);border-color:var(--ko)}.fb.info{background:var(--info-bg);border-color:var(--pri)}
+@keyframes pop{from{transform:scale(.97);opacity:0}}
+.shake{animation:shake .5s}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(4px)}}
+.cls{list-style:none;padding:0;display:grid;gap:.6rem}.cl{border:2px solid var(--line);border-radius:12px;padding:.7rem .9rem}.cl p{margin:0 0 .3rem;font-weight:600}
+.good{border-color:var(--ok)!important;background:var(--ok-bg)}.bad{border-color:var(--ko)!important;background:var(--ko-bg)}
+.clfb,.mfb{font-size:.94rem;margin-top:.4rem}
+.mrow{display:grid;grid-template-columns:1fr minmax(180px,260px);gap:.4rem .8rem;align-items:center;border:2px solid var(--line);border-radius:12px;padding:.6rem .8rem;margin:.5rem 0}
+.mrow label{font-weight:600}.mrow .mfb{grid-column:1/-1}
+select,input[type=search],input[type=text]{font:inherit;padding:.5rem .6rem;border:2px solid var(--line);border-radius:10px;background:#fff;color:#1b2333;min-height:44px;width:100%}
+.order{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.pool{display:grid;gap:.5rem}.pool .btn{text-align:left;font-weight:600}
+.seq{border:2px dashed var(--line);border-radius:12px;padding:.6rem .6rem .6rem 2.2rem;min-height:8rem;margin:0}
+.seq li{padding:.35rem .5rem;border-radius:8px;margin:.25rem 0;background:#f7f8fc}.seq li.empty{list-style:none;background:none;margin-left:-1.6rem}
+.h4{font-size:1rem;margin:.2rem 0 .5rem}
+/* Flux iPaaS animé (chapitre 6) */
+fieldset{border:2px solid var(--line);border-radius:12px;padding:.6rem .9rem;margin:.8rem 0}legend{font-weight:700;padding:0 .4rem}
+.wf{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center;background:#fff7ed;border:3px dashed #fdba74;border-radius:14px;padding:1.7rem .8rem .8rem;min-height:4.5rem;margin:.5rem 0;transition:background .3s}
+.wf.okk{background:var(--ok-bg);border:3px solid var(--ok)}.wf.ko{background:var(--ko-bg);border:3px solid var(--ko)}
+.blk{position:relative;background:#fff;border:2px solid var(--ip);border-radius:10px;padding:.35rem .7rem;font-weight:600;font-size:.92rem;color:#1b2333;transition:transform .25s,background .25s,box-shadow .25s}
+.blk.trig{background:var(--ip);color:#fff}.blk.end{border-style:dashed;border-color:#334155}
+.blk.active{box-shadow:0 0 0 4px #fdba74;transform:scale(1.07)}
+.blk.pass{border-color:var(--ok);background:#d1f5dc;color:#14532d;border-style:solid}.blk.pass::after{content:" ✓";font-weight:800}
+.blk.fail{border-color:var(--ko);background:var(--ko);color:#fff;transform:scale(1.07)}.blk.off{opacity:.35}
+.tok{position:absolute;top:-1.55rem;left:50%;transform:translateX(-50%);font-size:1.25rem;animation:hop .5s}
+@keyframes hop{from{transform:translate(-160%,0);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+.wa{color:#9ca3af;font-weight:800;font-size:1.2rem}.wa.go{color:var(--ok)}.wa.off{opacity:.3}
+/* ===== 8. Arcade « Centre de tri » ===== */
+.arc-hud{display:flex;justify-content:space-between;gap:.5rem;font-weight:700;margin:.4rem 0;flex-wrap:wrap}
+.arena{position:relative;height:300px;border:3px solid var(--pri);border-radius:14px;background:linear-gradient(#1e1b4b,#3f3cbb);overflow:hidden}
+.floor{position:absolute;left:0;right:0;bottom:0;height:6px;background:#ef4444}
+.arc-msg{position:absolute;left:50%;top:0;transform:translateX(-50%);max-width:88%;background:#fff;color:#1b2333;border-radius:12px;padding:.4rem .8rem;font-weight:700;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);font-size:.95rem}
+.arc-msg small{display:block;font-weight:600;color:#4b5563;font-size:.75rem}
+.arc-msg.fly{transition:left .25s ease-in,top .25s ease-in}.arc-msg.okm{background:#d1f5dc}.arc-msg.kom{background:#fdecea}
+.arc-over{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center;padding:1rem;overflow:auto}
+.arc-over[hidden]{display:none}
+.arc-err{background:#fff;color:#1b2333;border-radius:10px;padding:.4rem .8rem;text-align:left;font-size:.84rem;max-width:95%}
+.arc-err ul{margin:.3rem 0;padding-left:1.1rem}
+.bins{display:grid;grid-template-columns:repeat(4,1fr);gap:.4rem;margin-top:.5rem}
+.bin{font:inherit;display:flex;flex-direction:column;align-items:center;gap:.1rem;background:#f7f8fc;border:3px solid var(--line);border-radius:12px;padding:.4rem;cursor:pointer;font-weight:700;color:#1b2333;font-size:.88rem}
+.bin .pi{font-size:1.5rem}.bin.okb{border-color:var(--ok);background:var(--ok-bg)}.bin.kob{border-color:var(--ko);background:var(--ko-bg)}
+kbd{background:#1b2333;color:#fff;border-radius:5px;padding:0 .35rem;font-size:.75rem;font-family:inherit}
+/* ===== 9. Bilan et certificat deluxe ===== */
+.final-score{font-size:2.6rem;font-weight:800;color:var(--pri);text-align:center;margin:.3rem 0}
+.cert{background:radial-gradient(circle at 50% 0,#fffaf0,#fbf3dc);border:12px double #c9a227;outline:2px solid #e9d38a;outline-offset:-22px;padding:2rem 1.6rem;text-align:center;font-family:Georgia,"Times New Roman",serif;color:#1f2937;max-width:920px;margin:1.2rem auto;position:relative}
+.orn{position:absolute;font-size:1.8rem;color:#b8901f}.orn.tl{top:.4rem;left:.8rem}.orn.tr{top:.4rem;right:.8rem}.orn.bl{bottom:.4rem;left:.8rem}.orn.br{bottom:.4rem;right:.8rem}
+.cert-top{display:flex;align-items:center;justify-content:center;gap:1rem}
+.cert-plug svg{width:64px;height:74px}.cert-plug.flip svg{transform:scaleX(-1)}
+.cert .sub{text-transform:uppercase;letter-spacing:3px;color:#92400e;font-size:.85rem;margin:0}
+.cert h2{font-size:2.4rem;margin:.1rem 0;color:#8a6d1d;background:linear-gradient(90deg,#8a6d1d,#e6c35c,#8a6d1d);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.edition{margin:0;font-style:italic;color:#6b5a2a;font-size:.9rem}
+.cert .name{font-size:2.2rem;font-style:italic;font-weight:bold;color:#3f3cbb;border-bottom:2px solid #c9a227;display:inline-block;padding:0 1.4rem;margin:.4rem 0 .6rem}
+.ribbon{display:inline-block;background:#b42318;color:#fff;font-weight:bold;padding:.35rem 2rem;margin:.4rem 0;clip-path:polygon(0 0,100% 0,94% 50%,100% 100%,0 100%,6% 50%);letter-spacing:1px}
+.cert .stats{display:flex;justify-content:center;gap:1.3rem;flex-wrap:wrap;margin:.8rem 0}
+.cert .stats div{display:flex;flex-direction:column;min-width:110px}.cert .stats b{font-size:1.45rem;color:#312e81}.cert .stats span{font-size:.8rem;color:#475569}
+.cstyle{font-size:1.1rem;color:#92400e;margin:.4rem 0}.brow{font-size:1.5rem;letter-spacing:.2rem;margin:.3rem 0}
+.cert .foot{display:flex;justify-content:space-between;align-items:center;gap:1rem;margin-top:1rem;font-size:.92rem}
+.seal{width:86px;height:86px;border-radius:50%;background:radial-gradient(circle,#f5d76e,#c9a227);box-shadow:0 0 0 4px #fff,0 0 0 7px #c9a227;color:#fff;display:flex;align-items:center;justify-content:center;font-size:2.2rem;flex:none;position:relative;overflow:hidden}
+.seal::after{content:"";position:absolute;inset:-50%;background:linear-gradient(115deg,transparent 42%,rgba(255,255,255,.85) 50%,transparent 58%);animation:shine 2.6s infinite}
+@keyframes shine{from{transform:translateX(-60%)}to{transform:translateX(60%)}}
+/* ===== 10. Fenêtres, notifications, confettis ===== */
+dialog{border:0;border-radius:18px;padding:0;max-width:640px;width:calc(100% - 2rem);box-shadow:0 20px 60px rgba(0,0,0,.3);color:var(--ink);background:var(--card)}
+dialog::backdrop{background:rgba(15,23,42,.55)}.dlg-in{padding:1.3rem}.dlg-in h2{margin-top:0}
+.glist{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.4rem;max-height:38vh;overflow:auto;margin-top:.6rem}
+.glist button{font:inherit;text-align:left;background:#f7f8fc;border:2px solid var(--line);border-radius:10px;padding:.4rem .6rem;cursor:pointer;color:#1b2333}
+.glist button.seen{background:var(--pri-soft)}
+.gdef{background:var(--pri-soft);border-radius:12px;padding:.6rem .9rem;margin:.7rem 0;min-height:3rem}.gdef h3{margin:.2rem 0}
+.bgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:.6rem;max-height:45vh;overflow:auto}
+.badge{border:2px solid var(--line);border-radius:14px;padding:.7rem;text-align:center;font-size:.88rem}.badge .ico{font-size:2.1rem;display:block}
+.badge.off{filter:grayscale(1);opacity:.55}.badge.on{border-color:#d4a017;background:#fffbeb}
+.check{display:flex;gap:.6rem;align-items:center;margin:.7rem 0;font-weight:600}.check input{width:1.3rem;height:1.3rem;accent-color:var(--pri)}
+#toasts{position:fixed;right:1rem;bottom:1rem;z-index:300;display:flex;flex-direction:column;gap:.5rem;pointer-events:none;max-width:min(360px,90vw)}
+.toast{background:#111827;color:#fff;padding:.65rem 1rem;border-radius:12px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.25);transition:opacity .4s,transform .4s}
+.toast.badge{background:#fff8e1;color:#78350f;border:2px solid #d4a017}.toast.out{opacity:0;transform:translateX(30px)}
+#confetti{position:fixed;inset:0;pointer-events:none;z-index:400;display:none}
+/* ===== 11. Animations réduites, responsive, impression ===== */
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+html.calm *,html.calm *::before,html.calm *::after{animation:none!important;transition:none!important}
+@media (max-width:820px){.layout{grid-template-columns:1fr}nav.chapters ol{flex-direction:row;overflow-x:auto;padding-bottom:.4rem}.chap{min-width:200px}
+ .duo,.order,.codes,.mapviz,.bts{grid-template-columns:1fr}.bt-head{display:none}.big-arrow{transform:rotate(90deg)}.mrow{grid-template-columns:1fr}
+ main.card{padding:1rem}#stepTitle{font-size:1.35rem}.cert .name{font-size:1.7rem}.cert-plug{display:none}.bin{font-size:.75rem}}
+@media print{@page{size:A4 landscape;margin:8mm}
+ header,nav,.navrow,.guide,#toasts,#confetti,.skip,.no-print,.eyebrow,#stepTitle,.flyplug{display:none!important}
+ .layout{display:block;margin:0;padding:0}main.card{box-shadow:none;padding:0}body{background:#fff}
+ .cert{margin:0 auto;page-break-inside:avoid;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu principal</a>
+<header class="top">
+  <div class="top-in">
+    <div class="logo" id="logo"><span aria-hidden="true">🔌</span> Intégra’Quest <small>· les couches d’intégration</small></div>
+    <span class="pill" id="scoreP">⭐ 0 pts</span>
+    <button class="hbtn" id="openBadges" type="button">🏅 <span id="badgeN">0</span></button>
+    <button class="hbtn" id="arcBtn" type="button">🕹️ Arcade</button>
+    <button class="hbtn" id="openGloss" type="button">📖 Glossaire</button>
+    <button class="hbtn" id="musBtn" type="button" aria-pressed="false">🎵 Off</button>
+    <button class="hbtn" id="sndBtn" type="button" aria-pressed="true">🔊 Son</button>
+    <button class="hbtn" id="openPrefs" type="button">⚙️ Options</button>
+  </div>
+  <div class="prog-row"><span id="progLabel">Progression : 0 %</span>
+    <div class="progress" id="progBar" role="progressbar" aria-labelledby="progLabel" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="progFill"></div></div></div>
+</header>
+<div class="layout"><nav class="chapters" id="nav" aria-label="Chapitres du jeu"></nav><main id="main" class="card" tabindex="-1"></main></div>
+
+<dialog id="dlgGloss" aria-labelledby="glT"><div class="dlg-in">
+  <h2 id="glT">📖 Glossaire</h2><div class="gdef" id="gDef" tabindex="-1" aria-live="polite"></div>
+  <label for="gSearch"><b>Rechercher un terme</b></label><input type="search" id="gSearch" placeholder="Ex. : API, SFTP, mapping…">
+  <div class="glist" id="gList"></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn pri" type="button" data-close>Fermer</button></div>
+</div></dialog>
+
+<dialog id="dlgBadges" aria-labelledby="bdT"><div class="dlg-in">
+  <h2 id="bdT">🏅 Mes badges</h2><div class="bgrid" id="bGrid"></div><div id="eggList"></div>
+  <div class="row" style="justify-content:flex-end"><button class="btn pri" type="button" data-close>Fermer</button></div>
+</div></dialog>
+
+<dialog id="dlgArcade" aria-labelledby="arT"><div class="dlg-in">
+  <h2 id="arT">🕹️ Arcade : le centre de tri</h2>
+  <p class="muted" style="margin:.2rem 0">Envoie chaque message vers le bon système avant qu’il touche le sol ! Clique sur une destination ou appuie sur <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd>.</p>
+  <div class="arc-hud"><span>Score : <b id="arcScore">0</b></span><span id="arcLives">❤️❤️❤️</span><span>Record : <b id="arcBest">0</b></span></div>
+  <div class="arena" id="arena"><div class="arc-msg" id="arcMsg" hidden></div><div class="floor"></div><div class="arc-over" id="arcOver"></div></div>
+  <div class="bins" id="bins"></div>
+  <p id="arcLive" class="sr-only" aria-live="assertive"></p>
+  <div class="row"><button class="btn pri" type="button" id="arcStart">▶ Jouer</button><span style="flex:1"></span><button class="btn" type="button" data-close>Fermer</button></div>
+</div></dialog>
+
+<dialog id="dlgPrefs" aria-labelledby="prT"><div class="dlg-in">
+  <h2 id="prT">⚙️ Options</h2>
+  <label class="check"><input type="checkbox" id="pBig"> Texte plus grand</label>
+  <label class="check"><input type="checkbox" id="pCon"> Contraste élevé</label>
+  <label class="check"><input type="checkbox" id="pCalm"> Réduire les animations (confettis, secousses et vols désactivés)</label>
+  <label class="check"><input type="checkbox" id="pSnd"> Sons activés</label>
+  <label class="check"><input type="checkbox" id="pMus"> Musique 8-bit de fond</label>
+  <p class="muted">Réglages et progression sont enregistrés dans ce navigateur.</p>
+  <div class="row"><button class="btn" type="button" id="resetAll">↺ Effacer ma progression</button><span style="flex:1"></span><button class="btn pri" type="button" data-close>Fermer</button></div>
+</div></dialog>
+
+<p id="live" class="sr-only" aria-live="polite"></p>
+<div id="toasts" aria-hidden="true"></div>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<script>
+(function(){
+'use strict';
+/* ===================== 1. UTILITAIRES ===================== */
+const $=(s,r=document)=>r.querySelector(s);
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const norm=s=>s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+/** Terme cliquable qui ouvre le glossaire */
+const T=(id,label)=>`<button type="button" class="term" data-term="${id}">${label}</button>`;
+/** Vrai si le joueur (ou son système) veut limiter les animations */
+const calm=()=>S.prefs.calm||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+/* ===================== 2. GLOSSAIRE ===================== */
+const GL={
+integration:{t:'Intégration',d:'Faire circuler automatiquement les informations entre logiciels, au bon format, au bon endroit et au bon moment.'},
+middleware:{t:'Couche d’intégration (middleware)',d:'Logiciel placé entre les autres pour les connecter, transformer les données, les router, orchestrer les étapes et surveiller les échanges.'},
+mapping:{t:'Mapping (ou map)',d:'Règles de traduction d’un message d’un format vers un autre, champ par champ.',ex:'« date_cmd: 18/11/2026 » devient « OrderDate: 2026-11-18 ».'},
+routing:{t:'Routage',d:'Décider vers quel destinataire envoyer un message, souvent selon son contenu.',ex:'Une facture part vers la comptabilité.'},
+orchestration:{t:'Orchestration',d:'Enchaînement automatisé de plusieurs étapes d’un processus, dans un ordre précis, avec gestion des erreurs.'},
+p2p:{t:'Point-à-point',d:'Chaque logiciel est relié directement à chacun des autres : n × (n − 1) ÷ 2 liens.'},
+hub:{t:'Hub (architecture en étoile)',d:'Tous les logiciels se branchent sur une plateforme centrale qui gère les échanges.'},
+api:{t:'API',d:'Porte d’entrée qu’un logiciel ouvre aux autres pour qu’ils lui demandent des informations ou des actions, avec une réponse immédiate.',ex:'GET /stock/42 renvoie le stock de l’article 42.'},
+status:{t:'Code de statut HTTP',d:'Nombre renvoyé par une API : 2xx succès, 4xx erreur de l’appelant, 5xx erreur du serveur.',ex:'200 OK, 201 Created, 401 Unauthorized, 404 Not Found.'},
+token:{t:'Jeton (token)',d:'Badge numérique temporaire qui prouve l’identité de celui qui appelle une API.'},
+sftp:{t:'SFTP',d:'Transfert de fichiers chiffré, qui passe par SSH (port 22). À ne pas confondre avec FTP, non chiffré.'},
+ssh:{t:'SSH',d:'Protocole de connexion chiffrée à un serveur distant. SFTP s’appuie dessus.'},
+batch:{t:'Batch (traitement par lots)',d:'Traiter un ensemble de données en une fois, souvent à heure fixe.',ex:'Les ventes du jour envoyées à 2 h du matin.'},
+ack:{t:'Accusé de réception (ACK)',d:'Message ou fichier qui confirme qu’un envoi a été reçu ou traité. Indispensable avec SFTP.'},
+json:{t:'JSON',d:'Format texte léger de données, le plus courant dans les API.',ex:'{"nom": "Léa", "ville": "Lyon"}'},
+xml:{t:'XML',d:'Format texte structuré par balises, très utilisé par BizTalk.',ex:'<client><nom>Léa</nom></client>'},
+csv:{t:'CSV',d:'Fichier texte en tableau : une ligne par enregistrement, colonnes séparées par un point-virgule.',ex:'LYON;FOU-SOIE-RG;3'},
+schema:{t:'Schéma',d:'« Formulaire modèle » décrivant la structure attendue d’un message. Il sert à valider les messages.'},
+biztalk:{t:'BizTalk Server',d:'Couche d’intégration de Microsoft installée sur les serveurs de l’entreprise. La version 2020 est la dernière ; son successeur désigné est Azure Logic Apps.'},
+edi:{t:'EDI',d:'Échange de Données Informatisé : formats normalisés (EDIFACT, X12…) pour échanger commandes et factures entre entreprises.'},
+onprem:{t:'On-premise (sur site)',d:'Logiciel installé et géré sur les serveurs de l’entreprise elle-même.'},
+logicapps:{t:'Azure Logic Apps',d:'iPaaS de Microsoft, désignée comme successeur de BizTalk Server.'},
+adapter:{t:'Adaptateur',d:'Composant BizTalk qui sait parler une technologie précise : SFTP, HTTP, fichier, base de données…'},
+pipeline:{t:'Pipeline',d:'Suite de traitements appliqués à un message à l’entrée ou à la sortie de BizTalk : décodage, conversion, validation.'},
+messagebox:{t:'MessageBox',d:'Base de données au cœur de BizTalk : chaque message y est enregistré puis distribué à ses abonnés.'},
+pubsub:{t:'Publication / abonnement',d:'L’émetteur publie un message ; seuls les abonnés intéressés par ce type de message le reçoivent.'},
+ipaas:{t:'iPaaS',d:'Integration Platform as a Service : plateforme d’intégration fournie comme un service cloud.',ex:'Azure Logic Apps, MuleSoft, Boomi, Workato.'},
+workflow:{t:'Workflow (flux)',d:'Suite d’étapes automatisées : un déclencheur, puis des actions.'},
+trigger:{t:'Déclencheur (trigger)',d:'Événement qui démarre un flux : arrivée d’un fichier, appel d’API, horaire…'},
+connector:{t:'Connecteur',d:'Brique prête à l’emploi d’une iPaaS pour se brancher à un système sans tout programmer.'}
+};
+
+/* ===================== 3. SCHÉMAS SVG ===================== */
+const PLUG=`<svg viewBox="0 0 120 135" aria-hidden="true" focusable="false"><line x1="60" y1="8" x2="60" y2="24" stroke="#475569" stroke-width="4"/><circle cx="60" cy="8" r="7" fill="#fbbf24"/><rect x="8" y="46" width="10" height="20" rx="4" fill="#3730a3"/><rect x="102" y="46" width="10" height="20" rx="4" fill="#3730a3"/><rect x="16" y="22" width="88" height="68" rx="24" fill="#4f46e5"/><rect x="27" y="33" width="66" height="46" rx="16" fill="#eef2ff"/><ellipse cx="47" cy="52" rx="6" ry="7.5" fill="#1e1b4b"/><ellipse cx="73" cy="52" rx="6" ry="7.5" fill="#1e1b4b"/><circle cx="49" cy="49" r="2" fill="#fff"/><circle cx="75" cy="49" r="2" fill="#fff"/><path d="M48 65 Q60 74 72 65" stroke="#1e1b4b" stroke-width="3.5" fill="none" stroke-linecap="round"/><rect x="34" y="92" width="52" height="26" rx="10" fill="#818cf8"/><text x="60" y="111" text-anchor="middle" font-size="15" fill="#fff" font-family="Arial">⇄</text><rect x="45" y="118" width="8" height="14" rx="2" fill="#94a3b8"/><rect x="67" y="118" width="8" height="14" rx="2" fill="#94a3b8"/></svg>`;
+function shopSVG(hub){
+  const apps=[['🛍️','Site web',10,10],['🏭','Entrepôt',210,10],['💶','Compta',10,150],['🚚','Transport',210,150]];
+  let s=`<svg viewBox="0 0 320 200" role="img" aria-label="${hub?'Les quatre logiciels sont reliés à une couche d’intégration centrale':'Un employé recopie à la main les informations entre les quatre logiciels'}">`;
+  apps.forEach(a=>{s+=`<line x1="${a[2]+50}" y1="${a[3]+20}" x2="160" y2="100" stroke="${hub?'#3f3cbb':'#dc2626'}" stroke-width="3" ${hub?'':'stroke-dasharray="6 5"'}/>`;});
+  s+=hub?`<rect x="102" y="78" width="116" height="44" rx="12" fill="#3f3cbb"/><text x="160" y="105" text-anchor="middle" font-size="13" font-weight="700" fill="#fff">🔀 Intégration</text>`
+        :`<circle cx="160" cy="100" r="36" fill="#fdecea" stroke="#dc2626" stroke-width="2"/><text x="160" y="98" text-anchor="middle" font-size="22">🧑‍💻</text><text x="160" y="118" text-anchor="middle" font-size="9" fill="#b42318" font-weight="700">copie à la main</text>`;
+  apps.forEach(a=>{s+=`<rect x="${a[2]}" y="${a[3]}" width="100" height="40" rx="10" fill="#fff" stroke="#334155" stroke-width="2"/><text x="${a[2]+50}" y="${a[3]+25}" text-anchor="middle" font-size="13" fill="#1b2333">${a[0]} ${a[1]}</text>`;});
+  return s+'</svg>';
+}
+function meshSVG(n,hub){
+  const L=['Site','ERP','CRM','Compta','Stock','RH','Paie','Transp.','BI','Caisse'],cx=130,cy=115,r=88;
+  const P=Array.from({length:n},(_,i)=>{const a=-Math.PI/2+i*2*Math.PI/n;return [cx+r*Math.cos(a),cy+r*Math.sin(a)];});
+  let s=`<svg viewBox="0 0 260 230" role="img" aria-label="${hub?`${n} logiciels reliés à un hub : ${n} liens`:`${n} logiciels reliés deux à deux : ${n*(n-1)/2} liens`}">`;
+  if(hub)P.forEach(p=>{s+=`<line x1="${cx}" y1="${cy}" x2="${p[0].toFixed(1)}" y2="${p[1].toFixed(1)}" stroke="#3f3cbb" stroke-width="3"/>`;});
+  else for(let i=0;i<n;i++)for(let j=i+1;j<n;j++)s+=`<line x1="${P[i][0].toFixed(1)}" y1="${P[i][1].toFixed(1)}" x2="${P[j][0].toFixed(1)}" y2="${P[j][1].toFixed(1)}" stroke="#dc2626" stroke-width="2" opacity=".75"/>`;
+  if(hub)s+=`<rect x="${cx-24}" y="${cy-15}" width="48" height="30" rx="8" fill="#3f3cbb"/><text x="${cx}" y="${cy+5}" text-anchor="middle" font-size="12" font-weight="700" fill="#fff">Hub</text>`;
+  P.forEach((p,i)=>{s+=`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="20" fill="#fff" stroke="#334155" stroke-width="2"/><text x="${p[0].toFixed(1)}" y="${(p[1]+4).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="#1b2333">${L[i]}</text>`;});
+  return s+'</svg>';
+}
+function apiSVG(){
+  return `<svg viewBox="0 0 360 170" role="img" aria-labelledby="apiT"><title id="apiT">Échange par API : le site envoie une requête, l’API de l’entrepôt répond aussitôt.</title>
+  <defs><marker id="ahA" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#1d5fd1"/></marker><marker id="ahB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#146c2e"/></marker></defs>
+  <rect x="10" y="38" width="100" height="84" rx="12" fill="#e8f0ff" stroke="#1d5fd1" stroke-width="2"/><text x="60" y="76" text-anchor="middle" font-size="26">🛍️</text><text x="60" y="104" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2333">Site web</text>
+  <rect x="250" y="38" width="100" height="84" rx="12" fill="#e8f0ff" stroke="#1d5fd1" stroke-width="2"/><text x="300" y="76" text-anchor="middle" font-size="26">🏭</text><text x="300" y="104" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2333">API entrepôt</text>
+  <line x1="112" y1="62" x2="246" y2="62" stroke="#1d5fd1" stroke-width="3" marker-end="url(#ahA)"/><text x="180" y="52" text-anchor="middle" font-size="11" fill="#1b2333">① Requête : « quel stock ? »</text>
+  <line x1="248" y1="100" x2="114" y2="100" stroke="#146c2e" stroke-width="3" marker-end="url(#ahB)"/><text x="180" y="118" text-anchor="middle" font-size="11" fill="#1b2333">② Réponse : 200 OK « 12 »</text>
+  <circle class="dot" cx="112" cy="62" r="6" fill="#1d5fd1"/><circle class="dot back" cx="248" cy="100" r="6" fill="#146c2e"/>
+  <text x="180" y="156" text-anchor="middle" font-size="12" font-weight="700" fill="#1d5fd1">⏱ Réponse en une fraction de seconde</text></svg>`;
+}
+function sftpSVG(){
+  return `<svg viewBox="0 0 520 190" role="img" aria-labelledby="sfT"><title id="sfT">Échange par fichier SFTP : l’émetteur dépose un fichier sur un serveur, le destinataire vient le chercher plus tard.</title>
+  <defs><marker id="ahC" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0f7a55"/></marker></defs>
+  <rect x="10" y="50" width="100" height="80" rx="12" fill="#e7f7ef" stroke="#0f7a55" stroke-width="2"/><text x="60" y="86" text-anchor="middle" font-size="26">🛍️</text><text x="60" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2333">Émetteur</text>
+  <rect x="210" y="40" width="100" height="100" rx="12" fill="#fff" stroke="#0f7a55" stroke-width="2"/><text x="260" y="78" text-anchor="middle" font-size="26">🗄️</text><text x="260" y="102" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2333">Serveur SFTP</text><text x="260" y="122" text-anchor="middle" font-size="11" fill="#0f7a55">📁 /in</text>
+  <rect x="410" y="50" width="100" height="80" rx="12" fill="#e7f7ef" stroke="#0f7a55" stroke-width="2"/><text x="460" y="86" text-anchor="middle" font-size="26">💶</text><text x="460" y="112" text-anchor="middle" font-size="12" font-weight="700" fill="#1b2333">Destinataire</text>
+  <line x1="112" y1="90" x2="206" y2="90" stroke="#0f7a55" stroke-width="3" marker-end="url(#ahC)"/><text x="160" y="40" text-anchor="middle" font-size="11" fill="#1b2333">① Dépose</text><text x="160" y="54" text-anchor="middle" font-size="11" fill="#1b2333">le fichier</text>
+  <text class="dot r100" x="108" y="84" font-size="16">📄</text>
+  <line x1="312" y1="90" x2="406" y2="90" stroke="#0f7a55" stroke-width="3" stroke-dasharray="7 5" marker-end="url(#ahC)"/><text x="360" y="40" text-anchor="middle" font-size="11" fill="#1b2333">② Vient le</text><text x="360" y="54" text-anchor="middle" font-size="11" fill="#1b2333">chercher plus tard</text><text x="360" y="112" text-anchor="middle" font-size="10" fill="#4b5563">(toutes les 15 min)</text>
+  <text x="260" y="175" text-anchor="middle" font-size="12" font-weight="700" fill="#0f7a55">⏳ Pas de réponse immédiate : on vérifie après coup</text></svg>`;
+}
+function ipaasSVG(){
+  const nodes=[['👥','CRM'],['🏭','ERP'],['📁','Serveur SFTP'],['📧','Messagerie'],['🗄️','Base de données'],['🛍️','Site e-commerce']];
+  const cx=210,cy=125,rx=165,ry=90;let lines='',boxes='';
+  nodes.forEach((nd,i)=>{const a=-Math.PI/2+i*2*Math.PI/6,x=cx+rx*Math.cos(a),y=cy+ry*Math.sin(a),mx=cx+(x-cx)*.62,my=cy+(y-cy)*.62;
+    lines+=`<line x1="${cx}" y1="${cy}" x2="${x.toFixed(1)}" y2="${y.toFixed(1)}" stroke="#c2410c" stroke-width="2.5"/><circle cx="${mx.toFixed(1)}" cy="${my.toFixed(1)}" r="7" fill="#fff" stroke="#c2410c" stroke-width="2.5"/>`;
+    boxes+=`<rect x="${(x-50).toFixed(1)}" y="${(y-16).toFixed(1)}" width="100" height="32" rx="9" fill="#fff" stroke="#334155" stroke-width="2"/><text x="${x.toFixed(1)}" y="${(y+5).toFixed(1)}" text-anchor="middle" font-size="11" fill="#1b2333">${nd[0]} ${nd[1]}</text>`;});
+  return `<svg viewBox="0 0 420 258" role="img" aria-label="Une iPaaS dans le cloud, reliée par des connecteurs à un CRM, un ERP, un serveur SFTP, une messagerie, une base de données et un site e-commerce">${lines}
+  <g fill="#ffedd5" stroke="#c2410c" stroke-width="2"><circle cx="186" cy="124" r="27"/><circle cx="213" cy="108" r="32"/><circle cx="241" cy="126" r="25"/></g><rect x="166" y="120" width="96" height="30" rx="14" fill="#ffedd5"/>
+  <text x="212" y="127" text-anchor="middle" font-size="15" font-weight="800" fill="#9a3412">☁️ iPaaS</text><text x="212" y="143" text-anchor="middle" font-size="9.5" fill="#9a3412">dans le cloud</text>
+  ${boxes}<circle cx="18" cy="246" r="6" fill="#fff" stroke="#c2410c" stroke-width="2.5"/><text x="30" y="250" font-size="10" fill="#1b2333">= connecteur prêt à l’emploi</text></svg>`;
+}
+/** Curseur « point-à-point ou hub » */
+function initMesh(body){
+  const r=$('#nApps',body);
+  const upd=()=>{const n=+r.value,l=n*(n-1)/2;
+    $('#nOut',body).textContent=n;$('#p2pSvg',body).innerHTML=meshSVG(n,false);$('#hubSvg',body).innerHTML=meshSVG(n,true);
+    $('#p2pCount',body).textContent=l;$('#hubCount',body).textContent=n;
+    r.setAttribute('aria-valuetext',`${n} logiciels : ${l} liens en point-à-point, ${n} avec un hub`);if(n===10)unlock('architecte');};
+  r.addEventListener('input',upd);upd();
+}
+/** Vérifie le flux iPaaS : {ok:true} ou {at: index du bloc en échec, msg} */
+function checkPriceFlow(trig,acts){
+  if(trig!=='sftp')return{at:0,msg:'Mauvais déclencheur : tout commence quand le fournisseur dépose son fichier sur le SFTP.'};
+  const exp=['read','map','api'];
+  for(let k=0;k<acts.length;k++){const x=acts[k],y=exp[k];
+    if(x==='print'||x==='fwd')return{at:k+1,msg:'Imprimer ou transférer par e-mail remet un humain dans la boucle : le but est d’automatiser jusqu’au bout.'};
+    if(x!==y){
+      if(y==='read')return{at:k+1,msg:`Le fichier n’a pas encore été lu : impossible de ${x==='map'?'le transformer':'envoyer ses données'}. Commence par « Lire le contenu du fichier ».`};
+      if(y==='map')return{at:k+1,msg:'L’ERP reçoit du CSV alors qu’il attend du JSON : il répond « 400 Bad Request ». Il faut transformer avant d’envoyer.'};
+      return{at:k+1,msg:'Cette étape n’est pas au bon endroit.'};}}
+  if(acts.length<3)return{at:acts.length+1,msg:acts.length===1?'Le fichier a été lu, mais rien n’a été envoyé : il manque la transformation en JSON puis l’appel d’API.':'Les données sont en JSON… mais jamais envoyées : il manque l’appel d’API.'};
+  return{ok:true};
+}
+
+/* ===================== 4. CONTENU PÉDAGOGIQUE ===================== */
+const CH=[
+{icon:'🧩',title:'Pourquoi intégrer ?',steps:[
+ {type:'lesson',title:'Bienvenue dans Intégra’Quest !',guide:'Bonjour ! Je suis <b>Plug</b> 🔌. Clique sur moi pour une astuce… ou reste appuyé pour me lancer à travers l’écran !',html:`
+  <p>Tu vas découvrir comment les logiciels d’une entreprise <b>échangent leurs informations</b>, et ce que sont les <b>couches d’intégration</b>, en particulier <b>BizTalk</b> et les <b>iPaaS</b>. Aucune connaissance technique n’est nécessaire.</p>
+  <h3>Comment jouer ?</h3>
+  <ul><li>📖 Lis les explications, puis réponds aux <b>questions et défis</b> : une explication suit chaque réponse.</li>
+   <li>🔊 « Ding » pour une bonne réponse, « buzz » pour une erreur. 🎵 Une musique 8-bit est disponible en haut.</li>
+   <li>⭐ Gagne des <b>points</b> et des <b>badges</b> 🏅 en répondant, en explorant, en construisant…</li>
+   <li>🕹️ Après le chapitre 2, l’<b>arcade du centre de tri</b> se débloque.</li>
+   <li>🥚 <b>4 secrets</b> sont cachés dans le jeu : chacun rapporte <b>30 points</b>. Indices dans 🏅.</li>
+   <li>🔤 Les mots ${T('integration','soulignés en pointillés')} ouvrent leur définition.</li>
+   <li>📜 À la fin : un <b>certificat deluxe nominatif</b> avec note et mention.</li></ul>
+  <div class="key"><b>Durée :</b> environ 25 minutes. Clique sur <b>« Suivant »</b>.</div>`},
+ {type:'lesson',title:'Une maison de mode, plein de logiciels',guide:'Commençons par une petite histoire…',html:`
+  <p>Voici <b>Maison COCO</b>, une maison de mode (fictive) qui vend foulards, sacs et parfums en boutique et en ligne. Elle utilise plusieurs logiciels :</p>
+  <ul><li>🛍️ le <b>site web</b>, où les clients commandent ;</li><li>🏭 l’<b>entrepôt</b>, qui prépare les colis ;</li><li>💶 la <b>comptabilité</b>, qui émet les factures ;</li><li>🚚 le <b>transporteur</b>, qui livre.</li></ul>
+  <p>Quand Léa commande un foulard en soie rouge, <b>les quatre logiciels doivent être au courant</b>. Mais chacun vit dans son coin.</p>
+  <div class="duo"><figure class="schema">${shopSVG(false)}<figcaption>❌ <b>Sans intégration</b> : copie manuelle de chaque commande.</figcaption></figure>
+   <figure class="schema">${shopSVG(true)}<figcaption>✅ <b>Avec intégration</b> : les informations circulent seules.</figcaption></figure></div>
+  <p>Recopier à la main est <b>lent</b>, <b>risqué</b> (une faute dans l’adresse et le colis part ailleurs) et <b>coûteux</b>. En plus, le site écrit <code>18/11/2026</code> quand l’entrepôt attend <code>2026-11-18</code>.</p>
+  <div class="key"><b>À retenir</b> — L’${T('integration','intégration')}, c’est faire circuler <b>automatiquement</b> les informations entre logiciels, <b>au bon format</b>, <b>au bon endroit</b>, <b>au bon moment</b>.</div>`},
+ {type:'mcq',title:'Question : repérer un besoin d’intégration',guide:'Première question ! Prends ton temps.',
+  q:'Chez Maison COCO, laquelle de ces situations est un besoin d’intégration ?',
+  o:[{t:'La cliente choisit la couleur de son foulard sur le site.',fb:'Tout se passe dans un seul logiciel : aucune information ne part ailleurs.'},
+     {t:'Chaque nouvelle commande doit apparaître automatiquement dans le logiciel de l’entrepôt.',ok:1,fb:'Une information créée dans un logiciel (le site) doit être utilisée par un autre (l’entrepôt) : c’est un besoin d’intégration.'},
+     {t:'Le studio graphique change la photo de la page d’accueil.',fb:'C’est un changement d’apparence, pas un échange entre logiciels.'}],
+  ex:'Un besoin d’intégration apparaît dès qu’une information doit passer d’un logiciel à un autre.'}]},
+{icon:'🔀',title:'La couche d’intégration',steps:[
+ {type:'lesson',title:'Qu’est-ce qu’une couche d’intégration ?',guide:'Imagine un centre de tri postal… qui parlerait toutes les langues !',html:`
+  <p>Une <b>couche d’intégration</b> (ou ${T('middleware','middleware')}) est un logiciel placé <b>au milieu</b>. Elle reçoit les informations, les traduit si besoin, puis les distribue aux bons destinataires.</p>
+  <div class="example">🧠 <b>Image :</b> un <b>centre de tri postal doublé d’un interprète</b>.</div>
+  <h3>Ses 5 missions</h3>
+  <ul class="missions"><li><span class="mi" aria-hidden="true">🔌</span><b>Connecter</b><br>se brancher à chaque logiciel</li>
+   <li><span class="mi" aria-hidden="true">🔄</span><b>Transformer</b><br>traduire les formats (${T('mapping','mapping')})</li>
+   <li><span class="mi" aria-hidden="true">🧭</span><b>Router</b><br>choisir qui reçoit quoi (${T('routing','routage')})</li>
+   <li><span class="mi" aria-hidden="true">🎼</span><b>Orchestrer</b><br>enchaîner les étapes (${T('orchestration','orchestration')})</li>
+   <li><span class="mi" aria-hidden="true">👀</span><b>Surveiller</b><br>suivre chaque message, alerter</li></ul>
+  <div class="key"><b>À retenir</b> — La couche d’intégration <b>transporte</b>, <b>traduit</b> et <b>distribue</b> les informations, sous surveillance.</div>`},
+ {type:'match',title:'Défi : à chaque situation sa mission',guide:'Associe chaque situation à la bonne mission.',
+  intro:'Pour chaque situation, choisis la mission qui y répond, puis clique sur « Vérifier ».',
+  choices:['🔌 Connecter','🔄 Transformer','🧭 Router','🎼 Orchestrer','👀 Surveiller'],
+  rows:[{t:'La date « 18/11/2026 » doit devenir « 2026-11-18 ».',a:'🔄 Transformer',w:'Changer le format d’une donnée, c’est transformer.'},
+   {t:'Les commandes « express » partent chez le transporteur rapide.',a:'🧭 Router',w:'Choisir le destinataire selon le contenu, c’est router.'},
+   {t:'Vérifier le stock, puis facturer, puis expédier.',a:'🎼 Orchestrer',w:'Enchaîner des étapes dans un ordre défini, c’est orchestrer.'},
+   {t:'Recevoir une alerte si une commande reste bloquée une heure.',a:'👀 Surveiller',w:'Prévenir en cas de problème, c’est surveiller.'},
+   {t:'Pouvoir dialoguer avec le logiciel du nouvel entrepôt.',a:'🔌 Connecter',w:'Se brancher à un nouveau logiciel, c’est connecter.'}],
+  ex:'Ces 5 missions se retrouvent dans toutes les couches d’intégration, de BizTalk aux iPaaS.'},
+ {type:'lesson',title:'Point-à-point ou plateforme centrale ?',guide:'Pousse le curseur jusqu’à 10… un badge t’attend !',init:initMesh,html:`
+  <p>Sans couche d’intégration, on relie les logiciels <b>deux à deux</b> : c’est le ${T('p2p','point-à-point')}. Avec elle, chaque logiciel se branche <b>une seule fois</b> sur une plateforme centrale : le modèle en ${T('hub','étoile (hub)')}.</p>
+  <label for="nApps"><b>Nombre de logiciels : <span id="nOut">5</span></b></label><br><input type="range" id="nApps" min="2" max="10" value="5">
+  <div class="duo"><figure class="schema"><div id="p2pSvg"></div><figcaption>Point-à-point : <b><span id="p2pCount"></span> liens</b></figcaption></figure>
+   <figure class="schema"><div id="hubSvg"></div><figcaption>Plateforme centrale : <b><span id="hubCount"></span> liens</b></figcaption></figure></div>
+  <p>Formule du point-à-point : <b>n × (n − 1) ÷ 2</b>. Avec 10 logiciels : <b>45 liens</b> ! C’est l’« architecture spaghetti » 🍝.</p>
+  <div class="key"><b>À retenir</b> — Une plateforme centrale <b>réduit les connexions</b> et <b>regroupe la surveillance</b>.</div>`},
+ {type:'mcq',title:'Question : compter les liens',
+  q:'Maison COCO relie 6 logiciels tous entre eux en point-à-point. Combien de liens au maximum ?',
+  o:[{t:'6',fb:'6, c’est le nombre de liens avec une plateforme centrale.'},{t:'15',ok:1,fb:'6 × 5 ÷ 2 = 15 liens. Avec un hub, 6 suffiraient.'},{t:'36',fb:'36 = 6 × 6 compterait chaque lien en double.'}],
+  ex:'Formule : n × (n − 1) ÷ 2.'}]},
+{icon:'🔌',title:'API et fichiers SFTP',steps:[
+ {type:'lesson',title:'L’API : le coup de téléphone',guide:'Deux grandes façons d’échanger. Voici la première.',html:`
+  <p>Une ${T('api','API')} est une <b>porte d’entrée</b> qu’un logiciel ouvre aux autres. On lui pose une question, elle répond <b>tout de suite</b>, comme au <b>téléphone</b> : « Avez-vous le foulard en soie rouge ? » — « Oui, 12 en stock. »</p>
+  <figure class="schema">${apiSVG()}<figcaption>Une requête part, une réponse revient presque instantanément.</figcaption></figure>
+  <div class="example"><b>Exemple</b> — Le site affiche le stock du foulard <b>en direct</b> :<pre>Requête : GET https://api.entrepot.exemple/stock/foulard-soie-rouge
+Réponse : 200 OK   { "stock": 12 }</pre></div>
+  <div class="codes"><div class="code c2">🟢 <b>2xx</b> : succès</div><div class="code c4">🟠 <b>4xx</b> : erreur de l’appelant</div><div class="code c5">🔴 <b>5xx</b> : erreur du serveur</div></div>
+  <div class="key"><b>À retenir</b> — API = <b>temps réel</b>, <b>réponse immédiate</b> avec un ${T('status','code de statut')}. L’appelant prouve son identité avec un ${T('token','jeton')}.</div>`},
+ {type:'lesson',title:'Le fichier SFTP : la boîte aux lettres',html:`
+  <p>Deuxième façon : <b>déposer un fichier</b> sur un serveur. Le destinataire viendra le chercher <b>plus tard</b>. Le protocole le plus utilisé est ${T('sftp','SFTP')}, chiffré grâce à ${T('ssh','SSH')}.</p>
+  <figure class="schema">${sftpSVG()}<figcaption>Le fichier est déposé, puis récupéré plus tard : l’échange est différé.</figcaption></figure>
+  <div class="example"><b>Exemple</b> — Chaque nuit à 2 h, le site dépose <code>VENTES_2026-11-18.csv</code> sur le serveur SFTP ; à 2 h 15, la comptabilité vient le chercher (${T('batch','batch')}).</div>
+  <table><caption class="sr-only">Comparaison API et SFTP</caption><thead><tr><th scope="col">Critère</th><th scope="col">☎️ API</th><th scope="col">📬 SFTP</th></tr></thead>
+   <tbody><tr><th scope="row">Quand ?</th><td>Tout de suite</td><td>Plus tard (souvent planifié)</td></tr><tr><th scope="row">Quoi ?</th><td>Un petit message</td><td>Un fichier, souvent gros</td></tr>
+   <tr><th scope="row">Réponse ?</th><td>Immédiate</td><td>Vérifiée après coup (${T('ack','accusé de réception')})</td></tr></tbody></table>
+  <div class="key"><b>À retenir</b> — On choisit selon <b>l’urgence</b> et le <b>volume</b>.</div>`},
+ {type:'classify',title:'Défi : API ou fichier SFTP ?',guide:'Pense « urgence » et « volume » !',
+  intro:'Pour chaque besoin, choisis le mode d’échange le plus adapté.',cats:['☎️ API','📬 SFTP'],
+  items:[{t:'Afficher en direct le stock d’un foulard pendant que la cliente navigue.',a:'☎️ API',w:'La cliente attend : il faut une réponse immédiate.'},
+   {t:'Envoyer chaque nuit les 50 000 ventes du jour à la comptabilité.',a:'📬 SFTP',w:'Gros volume, pas d’urgence, envoi planifié : un fichier est idéal.'}],
+  ex:'Réponse immédiate → API ; gros lot régulier → fichier SFTP.'},
+ {type:'mcq',title:'Question : comment savoir si c’est arrivé ?',
+  q:'Ta couche d’intégration vient de déposer un fichier sur le SFTP d’un partenaire. Comment savoir s’il a été traité ?',
+  o:[{t:'On reçoit immédiatement un code 200 OK.',fb:'Les codes comme 200 OK appartiennent aux API. En SFTP, le dépôt ne déclenche aucune réponse.'},
+     {t:'On ne peut jamais le savoir.',fb:'Si, mais pas sur le moment.'},
+     {t:'Plus tard, grâce à un accusé de réception ou en surveillant ses dossiers.',ok:1,fb:'En SFTP, la confirmation arrive après coup : un fichier « .ack », ou le déplacement du fichier dans un dossier « traités ».'}],
+  ex:'L’API répond tout de suite ; le fichier SFTP se vérifie après coup.'}]},
+{icon:'🔄',title:'Traduire les données',steps:[
+ {type:'lesson',title:'Le mapping : traduire champ par champ',guide:'Les logiciels ne parlent pas la même langue…',html:`
+  <p>Pour que le message soit compris, la couche d’intégration le <b>traduit</b> : c’est le ${T('mapping','mapping')}. Formats courants : ${T('json','JSON')}, ${T('xml','XML')}, ${T('csv','CSV')}.</p>
+  <figure class="schema"><div class="mapviz"><div><b>Le site envoie (JSON)</b><pre>{
+  "nom_client": "Léa Martin",
+  "date_cmd": "18/11/2026",
+  "pays": "France"
+}</pre></div><div class="big-arrow" aria-hidden="true">➜</div><div><b>L’entrepôt attend (XML)</b><pre>&lt;Order&gt;
+  &lt;CustomerName&gt;Léa Martin&lt;/CustomerName&gt;
+  &lt;OrderDate&gt;2026-11-18&lt;/OrderDate&gt;
+  &lt;Country&gt;FR&lt;/Country&gt;
+&lt;/Order&gt;</pre></div></div><figcaption>Le mapping renomme les champs et convertit les valeurs.</figcaption></figure>
+  <p>Avant de traduire, on <b>vérifie</b> le message grâce à un ${T('schema','schéma')}.</p>
+  <div class="key"><b>À retenir</b> — <b>Valider</b> puis <b>transformer</b>, sans toucher aux logiciels.</div>`},
+ {type:'match',title:'Défi : fais le mapping !',guide:'Sans faute, tu gagnes un badge !',badge:'traducteur',
+  intro:'Associe chaque champ du site au champ attendu par l’entrepôt, puis clique sur « Vérifier ».',choices:['CustomerName','OrderDate','TotalAmount','Country'],
+  rows:[{t:'nom_client = « Léa Martin »',a:'CustomerName',w:'Le nom va dans CustomerName.'},{t:'date_cmd = « 18/11/2026 »',a:'OrderDate',w:'La date va dans OrderDate, convertie en 2026-11-18.'},
+   {t:'montant_ttc = « 390,00 »',a:'TotalAmount',w:'Le montant va dans TotalAmount (390.00).'},{t:'pays = « France »',a:'Country',w:'Le pays va dans Country, converti en « FR ».'}],
+  ex:'Un mapping : savoir où va chaque champ, et convertir sa valeur si besoin.'},
+ {type:'mcq',title:'Question : un message incomplet',
+  q:'Une commande arrive sans numéro de commande, alors que ce champ est obligatoire. Que doit faire la couche d’intégration ?',
+  o:[{t:'L’envoyer quand même à l’entrepôt.',fb:'Le problème serait juste déplacé, et plus difficile à trouver.'},
+     {t:'La mettre de côté, signaler l’erreur, et permettre de la relancer une fois corrigée.',ok:1,fb:'C’est le rôle de la validation : bloquer sans perdre, et prévenir quelqu’un.'},
+     {t:'La supprimer discrètement.',fb:'Une vraie commande serait perdue !'}]}]},
+{icon:'🏢',title:'BizTalk Server',steps:[
+ {type:'lesson',title:'BizTalk, l’intégrateur historique de Microsoft',guide:'Place au vétéran de l’intégration !',html:`
+  <p>${T('biztalk','BizTalk Server')} est la couche d’intégration de <b>Microsoft</b>, lancée en 2000. Elle fait circuler commandes, factures et échanges ${T('edi','EDI')} dans de nombreuses entreprises.</p>
+  <p>BizTalk s’installe <b>sur les serveurs de l’entreprise</b> (${T('onprem','on-premise')}), avec Windows Server et SQL Server. Elle sait appeler des API, gérer des fichiers SFTP, transformer, router, orchestrer et surveiller.</p>
+  <div class="news"><b>📅 Où en est BizTalk ?</b> Microsoft a confirmé que <b>BizTalk Server 2020 est la dernière version</b>. Fin de vente prévue le <b>31 mars 2027</b>, support standard jusqu’en <b>avril 2028</b>, support étendu payant jusqu’en <b>avril 2030</b>. Successeur désigné : ${T('logicapps','Azure Logic Apps')}.</div>
+  <div class="key"><b>À retenir</b> — BizTalk = intégration <b>installée chez soi</b>, robuste mais lourde, et en fin de vie.</div>`},
+ {type:'explore',title:'Schéma : le voyage d’une commande dans BizTalk',guide:'Clique sur chaque étape, ou « Suivre la commande » ✉️',
+  label:'Trajet de la commande de réassort de la boutique de Lyon à travers BizTalk',
+  intro:'<b>📌 L’exemple :</b> la boutique Maison COCO de <b>Lyon</b> a besoin de <b>3 foulards en soie rouge</b>. Elle dépose un fichier CSV sur le serveur SFTP. BizTalk doit le transmettre à l’<b>entrepôt</b>, qui ne comprend que le JSON envoyé à son API.',
+  from:{ico:'🏬',t:'Boutique Maison COCO de Lyon',sub:'dépose REASSORT_LYON_1187.csv'},
+  linkIn:'📁 via SFTP (fichier déposé dans /in)',linkOut:'🔌 via API (POST /api/orders)',
+  to:{ico:'🏭',t:'Entrepôt Maison COCO',sub:'préparation PREP-5531 créée ✅'},
+  parts:[
+   {ico:'📥',t:'Port de réception',sub:'+ adaptateur SFTP',ex:`Fichier récupéré :<pre>REASSORT_LYON_1187.csv
+LYON;FOU-SOIE-RG;3</pre>`,d:'La porte d’entrée. L’'+T('adapter','adaptateur')+' SFTP surveille /in et récupère le fichier dès qu’il arrive.',an:'le guichet d’un bureau de poste.'},
+   {ico:'🧪',t:'Pipeline de réception',sub:'convertir et contrôler',ex:`CSV converti en XML :<pre>&lt;Reassort&gt;
+  &lt;Boutique&gt;LYON&lt;/Boutique&gt;
+  &lt;Article&gt;FOU-SOIE-RG&lt;/Article&gt;
+  &lt;Qte&gt;3&lt;/Qte&gt;
+&lt;/Reassort&gt;</pre>✔ Conforme au schéma`,d:'Le '+T('pipeline','pipeline')+' transforme le CSV en XML et vérifie le '+T('schema','schéma')+'. Sans quantité, le message serait mis de côté.',an:'le contrôle des colis à l’entrée.'},
+   {ico:'📦',t:'MessageBox',sub:'la salle de tri',ex:`Message enregistré :<br>📌 Type : <b>Reassort</b><br>🔔 Abonné : orchestration <b>« Traiter réassort »</b>`,d:'Le message entre dans la '+T('messagebox','MessageBox')+'. BizTalk cherche qui est abonné au type « Reassort » : c’est la '+T('pubsub','publication / abonnement')+'.',an:'la salle de tri, où chaque colis va dans le bon bac.'},
+   {ico:'🎼',t:'Orchestration + map',sub:'traiter et traduire',ex:`✔ Stock vérifié : 42 disponibles<br>Map XML → JSON :<pre>{ "store": "LYON",
+  "sku": "FOU-SOIE-RG",
+  "qty": 3 }</pre>`,d:'L’'+T('orchestration','orchestration')+' vérifie le stock, puis la '+T('mapping','map')+' traduit le XML en JSON.',an:'le chef d’orchestre aidé d’un interprète.'},
+   {ico:'📤',t:'Port d’envoi',sub:'+ adaptateur HTTP',ex:`Appel de l’API :<pre>POST /api/orders
+← 201 Created {"id":"PREP-5531"}</pre>`,d:'La porte de sortie : l’adaptateur HTTP appelle l’API de l’entrepôt. Le code 201 confirme la création.',an:'le facteur qui revient avec la signature.'}]},
+ {type:'order',title:'Défi : remets le voyage dans l’ordre',
+  intro:'Clique sur les étapes dans l’ordre où la commande de Lyon traverse BizTalk, puis vérifie.',
+  items:['📥 L’adaptateur SFTP récupère REASSORT_LYON_1187.csv','🧪 Le pipeline convertit le CSV en XML et le valide','📦 Le message est publié dans la MessageBox','🎼 L’orchestration vérifie le stock et la map traduit en JSON','📤 Le port d’envoi appelle l’API de l’entrepôt'],
+  ex:'Entrée → contrôle → tri → traitement → sortie.'},
+ {type:'mcq',title:'Mini-enquête : le message bloqué',guide:'Lis le journal comme un détective 🕵️',badge:'detective',
+  intro:'Le service Facturation est passé hier à un nouveau format (« Facture_v2 »). Depuis, les factures n’arrivent plus. La console BizTalk affiche :',
+  log:'État : Suspendu (peut être relancé)\nErreur : le message publié n’a pas pu être routé\n        car aucun abonné n’a été trouvé.\nType de message : Facture_v2',
+  q:'Quelle est la cause la plus probable ?',
+  o:[{t:'Le serveur BizTalk est éteint.',fb:'Le message n’aurait pas été reçu. Or il l’a été.'},
+     {t:'Personne n’est abonné au nouveau type « Facture_v2 ».',ok:1,fb:'Le message a été publié dans la MessageBox, mais aucun abonné ne s’intéresse à « Facture_v2 » : BizTalk le suspend.'},
+     {t:'Le fichier a été perdu.',fb:'Il est « suspendu » et peut être relancé.'}],
+  ex:'Solution : adapter les abonnements et la map, puis relancer les messages suspendus.'}]},
+{icon:'☁️',title:'L’iPaaS',steps:[
+ {type:'lesson',title:'L’iPaaS : l’intégration dans le cloud',guide:'Passons à la génération suivante !',html:`
+  <p>${T('ipaas','iPaaS')} (<i>Integration Platform as a Service</i>) : une <b>plateforme d’intégration louée dans le cloud</b>. Même métier que BizTalk, mais l’éditeur gère serveurs et mises à jour.</p>
+  <figure class="schema">${ipaasSVG()}<figcaption>L’iPaaS se branche à chaque système par des connecteurs prêts à l’emploi.</figcaption></figure>
+  <p>On construit des ${T('workflow','workflows')} visuellement : un ${T('trigger','déclencheur')}, puis des <b>actions</b>, grâce à des ${T('connector','connecteurs')}. Exemples : Azure Logic Apps, MuleSoft, Boomi, Workato.</p>
+  <table><caption class="sr-only">Comparaison BizTalk et iPaaS</caption><thead><tr><th scope="col">Critère</th><th scope="col">🏢 BizTalk</th><th scope="col">☁️ iPaaS</th></tr></thead>
+   <tbody><tr><th scope="row">Où ?</th><td>Serveurs de l’entreprise</td><td>Cloud de l’éditeur</td></tr><tr><th scope="row">Mises à jour</th><td>À installer soi-même</td><td>Gérées par l’éditeur</td></tr>
+   <tr><th scope="row">Coût</th><td>Licences + serveurs + équipe</td><td>Abonnement / usage</td></tr></tbody></table>
+  <div class="key"><b>À retenir</b> — Une iPaaS = une couche d’intégration <b>en service cloud</b>, qui gère API et SFTP.</div>`},
+ {type:'builder',title:'Défi : construis ton premier flux iPaaS',guide:'Construis ton flux, puis « Tester » !',check:checkPriceFlow,
+  scenario:'Chaque nuit, le fournisseur de soie dépose sur son SFTP un fichier CSV avec ses nouveaux prix. Il faut mettre à jour ces prix dans l’ERP de Maison COCO, qui possède une API et attend du JSON.',
+  triggers:[{id:'mail',t:'📧 Quand un e-mail arrive dans ma boîte'},{id:'sftp',t:'📁 Quand un nouveau fichier arrive sur le SFTP du fournisseur'},{id:'click',t:'🖱️ Quand quelqu’un clique sur un bouton'}],
+  actions:[{id:'map',t:'🔄 Transformer le CSV en JSON'},{id:'print',t:'🖨️ Imprimer le fichier'},{id:'read',t:'📥 Lire le contenu du fichier'},{id:'api',t:'🔌 Appeler l’API de l’ERP'},{id:'fwd',t:'📧 Transférer le fichier au comptable'}],
+  success:'<b>✅ Ton flux fonctionne !</b> SFTP → lecture → transformation → API. Le fichier arrive par <b>SFTP</b> et repart par <b>API</b> : la couche d’intégration fait le pont.'},
+ {type:'classify',title:'Défi : BizTalk, iPaaS… ou les deux ?',
+  intro:'Pour chaque caractéristique, indique à qui elle correspond.',cats:['🏢 BizTalk','☁️ iPaaS','🤝 Les deux'],
+  items:[{t:'S’installe sur les serveurs de l’entreprise.',a:'🏢 BizTalk',w:'BizTalk est on-premise.'},{t:'Les mises à jour sont gérées par l’éditeur.',a:'☁️ iPaaS',w:'C’est un service cloud.'},
+   {t:'Sait échanger par API et par fichiers SFTP.',a:'🤝 Les deux',w:'Les deux gèrent ces deux modes.'},{t:'Utilise une base appelée « MessageBox ».',a:'🏢 BizTalk',w:'La MessageBox est propre à BizTalk.'},
+   {t:'Paiement à l’usage, sans serveur à acheter.',a:'☁️ iPaaS',w:'C’est le modèle du cloud.'}],
+  ex:'Même métier : ce qui change, c’est l’hébergement et qui gère la plateforme.'},
+ {type:'mcq',title:'Question : quelle plateforme conseiller ?',
+  q:'Une PME veut relier son outil client en ligne à sa facturation en ligne, vite et sans acheter de serveur. Que conseiller ?',
+  o:[{t:'Installer BizTalk Server.',fb:'Serveur, licences, experts… pour un produit en fin de vie.'},{t:'Exporter un fichier Excel à la main chaque semaine.',fb:'Ce n’est pas de l’intégration.'},
+     {t:'Une iPaaS, avec ses connecteurs prêts à l’emploi.',ok:1,fb:'Cas idéal : applications en ligne, connecteurs existants, aucun serveur à gérer.'}]}]},
+{icon:'🎓',title:'Bilan et certificat',steps:[
+ {type:'mcq',title:'Dernière question : le conseil avisé',guide:'Dernière question avant ton certificat !',
+  q:'Une entreprise fait tourner ses intégrations sur BizTalk Server 2020. Que lui conseiller ?',
+  o:[{t:'Tout arrêter : BizTalk ne fonctionne plus.',fb:'BizTalk 2020 fonctionne et reste supporté plusieurs années.'},{t:'Attendre la prochaine version.',fb:'Il n’y en aura pas : 2020 est la dernière.'},
+     {t:'Inventorier ses flux et planifier une migration, par exemple vers Azure Logic Apps.',ok:1,fb:'Démarche recommandée : inventorier, prioriser, migrer par étapes.'}]},
+ {type:'final',title:'Bravo, tu as terminé ! 🎉',guide:'Félicitations ! Saisis ton nom pour ton certificat deluxe 📜'}]}
+];
+
+/* ===================== 5. BADGES ET SECRETS ===================== */
+const BADGES=[
+{id:'premier',ico:'🌱',t:'Premier pas',d:'Première bonne réponse'},{id:'serie',ico:'🔥',t:'En feu',d:'5 bonnes réponses d’affilée'},
+{id:'curieux',ico:'🔎',t:'Curieux',d:'Lire 5 définitions'},{id:'encyclo',ico:'📚',t:'Encyclopédiste',d:'Lire 15 définitions'},
+{id:'architecte',ico:'🍝',t:'Anti-spaghetti',d:'Curseur à 10 logiciels'},{id:'traducteur',ico:'🔄',t:'Traducteur',d:'Mapping sans erreur'},
+{id:'explorateur',ico:'🧭',t:'Explorateur',d:'Les 5 étapes du schéma BizTalk'},{id:'detective',ico:'🕵️',t:'Détective',d:'Résoudre la mini-enquête'},
+{id:'batisseur',ico:'⚙️',t:'Bâtisseur',d:'Un flux iPaaS qui marche'},{id:'ingenieur',ico:'💎',t:'Flux parfait',d:'Flux réussi du premier coup'},
+{id:'sansfaute',ico:'🎯',t:'Sans faute',d:'Un chapitre avec tous ses points'},{id:'trieur',ico:'📦',t:'Trieur',d:'10 messages triés à l’arcade'},
+{id:'maitretri',ico:'🚀',t:'Maître du tri',d:'25 messages triés à l’arcade'},{id:'ami',ico:'🤖',t:'Ami de Plug',d:'Cliquer 5 fois sur Plug'},
+{id:'secrets',ico:'🥚',t:'Chasseur de secrets',d:'Trouver les 4 easter eggs'},{id:'diplome',ico:'🎓',t:'Diplômé·e',d:'Terminer le parcours'},
+{id:'certifie',ico:'📜',t:'Certifié·e',d:'Générer ton certificat'}];
+const EGGS=[{id:'konami',t:'Code Konami',h:'🎮 Un célèbre code de console : ↑ ↑ ↓ ↓ ← → ← → B A'},
+{id:'ipaas',t:'Super Plug',h:'⌨️ Tape au clavier le nom d’une plateforme d’intégration cloud (5 lettres)'},
+{id:'logo',t:'Pluie d’accessoires',h:'🖱️ Le logo adore qu’on insiste… 10 fois de suite'},
+{id:'lancer',t:'Plug volant',h:'🤾 Reste appuyé sur Plug et lance-le !'}];
+const EGG_PTS=30;
+
+/* ===================== 6. ÉTAT ET SAUVEGARDE ===================== */
+const KEY='integraquest-coco-v1';
+const fresh=()=>({pos:{c:0,s:0},done:{},pts:{},unlocked:0,badges:[],terms:[],eggs:[],arcBest:0,streak:0,clicks:0,name:'',prefs:{big:false,contrast:false,calm:false,sound:true,music:false}});
+let S=(()=>{try{const d=JSON.parse(localStorage.getItem(KEY));if(!d)return fresh();const f=fresh();return Object.assign(f,d,{prefs:Object.assign(f.prefs,d.prefs||{})});}catch(e){return fresh();}})();
+if(!Array.isArray(S.eggs))S.eggs=[];
+if(!CH[S.pos.c]||!CH[S.pos.c].steps[S.pos.s])S.pos={c:0,s:0};
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S));}catch(e){}}
+const INTERACTIVE=['mcq','classify','match','order','explore','builder'];
+const isInteractive=s=>INTERACTIVE.includes(s.type);
+function maxPts(s){if(['mcq','order','builder'].includes(s.type))return 10;if(s.type==='classify')return s.items.length*5;if(s.type==='match')return s.rows.length*5;return 0;}
+const ALL=[];CH.forEach((c,i)=>c.steps.forEach((_,j)=>ALL.push(i+'-'+j)));
+const TOTAL=CH.reduce((a,c)=>a+c.steps.reduce((b,s)=>b+maxPts(s),0),0);
+const score=()=>Object.values(S.pts).reduce((a,b)=>a+b,0);   // points pédagogiques
+const bonus=()=>S.eggs.length*EGG_PTS;                        // points des easter eggs
+const total=()=>score()+bonus();
+
+/* ===================== 7. SONS ET MUSIQUE 8-BIT (Web Audio) ===================== */
+let actx=null;
+function ac(){if(!actx){const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;actx=new C();}if(actx.state==='suspended')actx.resume();return actx;}
+function toneAt(f,t,dur,type,vol,f2){const c=ac();if(!c||!f)return;const o=c.createOscillator(),g=c.createGain();
+  o.type=type;o.frequency.setValueAtTime(f,t);if(f2)o.frequency.linearRampToValueAtTime(f2,t+dur);
+  g.gain.setValueAtTime(0.0001,t);g.gain.exponentialRampToValueAtTime(vol,t+0.015);g.gain.exponentialRampToValueAtTime(0.0001,t+dur);
+  o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+dur+0.05);}
+function tone(f,s,dur,type,vol,f2){const c=ac();if(c)toneAt(f,c.currentTime+s,dur,type,vol,f2);}
+function sfx(k){if(!S.prefs.sound)return;try{
+  if(k==='ding'){tone(880,0,.25,'sine',.3);tone(1320,.1,.4,'sine',.25);}
+  else if(k==='buzz'){tone(150,0,.35,'sawtooth',.18,110);tone(155,0,.35,'square',.07,115);}
+  else if(k==='fanfare'){[523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.3,'triangle',.2));}}catch(e){}}
+/* Notes : « C5 », « F#4 »… ; « - » = silence */
+const NOTE={C:0,'C#':1,D:2,'D#':3,E:4,F:5,'F#':6,G:7,'G#':8,A:9,'A#':10,B:11};
+function freq(n){const m=/^([A-G]#?)(\d)$/.exec(n);return m?440*Math.pow(2,(NOTE[m[1]]+(+m[2]+1)*12-69)/12):0;}
+/* Musique de fond : composition originale en boucle */
+const BGM={mel:'C5 E5 G5 E5 F5 A5 G5 E5 D5 F5 E5 C5 D5 B4 C5 - E5 G5 C6 G5 A5 F5 A5 C6 B5 G5 E5 G5 F5 D5 C5 -'.split(' '),
+  bass:'C3 - G3 - F2 - C3 - G2 - D3 - G2 - C3 - C3 - G3 - F2 - A2 - G2 - B2 - C3 - - -'.split(' '),step:.16};
+/* « Super Plug » : air de plateforme 8-bit ORIGINAL (easter egg « ipaas »). Remplaçable si vous avez des droits sur une autre mélodie. */
+const SUPER={mel:'C5 - E5 G5 C6 - B5 A5 G5 - E5 - F5 G5 A5 - G5 - E5 C5 D5 - G4 - C5 E5 G5 C6 - G5 C6 - E6 -'.split(' '),
+  bass:'C3 - G2 - C3 - G2 - C3 - G2 - F2 - C3 - F2 - C3 - G2 - D3 - G2 - C3 - G2 - C3 - C3 -'.split(' '),step:.11};
+/* Disco (easter egg Konami) : basse en octaves, original */
+const DISCO={mel:'A4 A5 A4 A5 G4 G5 G4 G5 F4 F5 F4 F5 E4 E5 E4 E5 A4 A5 A4 A5 C5 C6 B4 B5 A4 - E5 - A5 - - -'.split(' '),bass:[],step:.13};
+let bgm=null;
+function musicStart(){const c=ac();if(!c||bgm)return;let i=0,t=c.currentTime+.1;
+  bgm=setInterval(()=>{if(t<c.currentTime)t=c.currentTime+.05;
+    while(t<c.currentTime+.3){const m=BGM.mel[i%BGM.mel.length],b=BGM.bass[i%BGM.bass.length];
+      if(m!=='-')toneAt(freq(m),t,BGM.step*.9,'square',.04);if(b!=='-')toneAt(freq(b),t,BGM.step*1.8,'triangle',.08);t+=BGM.step;i++;}},60);}
+function musicStop(){clearInterval(bgm);bgm=null;}
+function syncMusic(){if(S.prefs.music&&S.prefs.sound)musicStart();else musicStop();}
+/** Joue un air une fois ; coupe la musique de fond pendant ce temps */
+function playTune(tn,type,vol){if(!S.prefs.sound)return;const c=ac();if(!c)return;
+  const dur=tn.mel.length*tn.step*1000+400;if(bgm){musicStop();clearTimeout(playTune.t);playTune.t=setTimeout(syncMusic,dur);}
+  let t=c.currentTime+.05;tn.mel.forEach((n,i)=>{if(n!=='-')toneAt(freq(n),t,tn.step*.9,type,vol);const b=tn.bass[i];if(b&&b!=='-')toneAt(freq(b),t,tn.step*1.6,'triangle',.08);t+=tn.step;});}
+
+/* ===================== 8. EFFETS VISUELS ===================== */
+function shake(el){if(!el||calm())return;el.classList.remove('shake');void el.offsetWidth;el.classList.add('shake');}
+function bump(el){if(!el||calm())return;el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');}
+/** Confettis (sans argument) ou pluie d’emojis (tableau d’emojis) */
+function confetti(emo){if(calm())return;const cv=$('#confetti'),c=cv.getContext('2d'),W=innerWidth,H=innerHeight;cv.width=W;cv.height=H;cv.style.display='block';
+  const cols=['#3f3cbb','#06b6d4','#f59e0b','#22c55e','#ef4444','#ec4899'];
+  const P=Array.from({length:emo?70:150},()=>emo?{x:Math.random()*W,y:-30-Math.random()*H*.7,vx:(Math.random()-.5)*2,vy:1+Math.random()*2,s:22+Math.random()*18,r:Math.random()*6,vr:(Math.random()-.5)*.08,e:pick(emo)}
+    :{x:W/2+(Math.random()-.5)*260,y:H/3,vx:(Math.random()-.5)*14,vy:-Math.random()*12-4,s:Math.random()*6+5,r:Math.random()*6,vr:(Math.random()-.5)*.3,c:pick(cols)});
+  const g=emo?.06:.35,dur=emo?4200:2600,t0=performance.now(),id=(confetti.id=(confetti.id||0)+1);
+  (function f(t){if(id!==confetti.id)return;c.clearRect(0,0,W,H);
+    P.forEach(p=>{p.vy+=g;p.vx*=.99;p.x+=p.vx;p.y+=p.vy;p.r+=p.vr;c.save();c.translate(p.x,p.y);c.rotate(p.r);
+      if(p.e){c.font=p.s+'px serif';c.textAlign='center';c.fillText(p.e,0,0);}else{c.fillStyle=p.c;c.fillRect(-p.s/2,-p.s/4,p.s,p.s/2);}c.restore();});
+    if(t-t0<dur)requestAnimationFrame(f);else{c.clearRect(0,0,W,H);cv.style.display='none';}})(t0);}
+function toast(msg,cls){const t=document.createElement('div');t.className='toast '+(cls||'');t.textContent=msg;$('#toasts').appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),400);},3400);}
+function announce(msg,cls){const l=$('#live');l.textContent='';setTimeout(()=>{l.textContent=msg;},60);toast(msg,cls);}
+const SR='<span class="sr-only">Plug, ton guide : </span>';
+const PRAISE=['Bravo, c’est juste ! 🎉','Excellent ! 🚀','Bien vu ! 😎','Parfait ! ✨'];
+const ENC=['Pas grave : lis l’explication, c’est comme ça qu’on apprend 💪','Presque ! Regarde le retour 👀','On apprend de ses erreurs 🙂'];
+const TIPS=['Les mots soulignés ouvrent le glossaire 📖','API = téléphone ☎️ ; SFTP = boîte aux lettres 📬','Reste appuyé sur moi et lance-moi ! 🤾','BizTalk 2020 est la dernière version ; successeur : Azure Logic Apps','Une iPaaS, c’est une couche d’intégration dans le cloud ☁️','4 secrets sont cachés… indices dans 🏅','Essaie l’arcade 🕹️ pour réviser le routage !'];
+function mood(m){const g=$('.guide');if(!g||calm())return;g.classList.remove('happy','sad','party');void g.offsetWidth;g.classList.add(m);}
+function say(html,m){const t=$('#guideTxt');if(t)t.innerHTML=SR+html;if(m)mood(m);}
+
+/* ===================== 9. RÉPONSES, BADGES, SECRETS ===================== */
+function right(){sfx('ding');S.streak++;save();say(pick(PRAISE),'happy');unlock('premier');if(S.streak>=5)unlock('serie');}
+function wrong(el){sfx('buzz');shake(el);S.streak=0;save();say(pick(ENC),'sad');}
+function unlock(id){if(S.badges.includes(id))return;const b=BADGES.find(x=>x.id===id);if(!b)return;
+  S.badges.push(id);save();renderHeader();bump($('#openBadges'));
+  setTimeout(()=>{sfx('fanfare');confetti();mood('party');announce(`🏅 Badge débloqué : ${b.ico} ${b.t}`,'badge');},450);}
+/** Easter egg : +30 points la première fois */
+function egg(id,msg){const first=!S.eggs.includes(id);
+  if(first){S.eggs.push(id);save();renderHeader();bump($('#scoreP'));}
+  announce(`🥚 ${msg}${first?` (+${EGG_PTS} pts)`:''}`,'badge');
+  if(first&&S.eggs.length===EGGS.length)unlock('secrets');}
+function checkChapter(ci){const c=CH[ci],mx=c.steps.reduce((a,s)=>a+maxPts(s),0);if(!mx)return;
+  if(c.steps.every((_,j)=>S.done[ci+'-'+j])&&c.steps.reduce((a,_,j)=>a+(S.pts[ci+'-'+j]||0),0)===mx)unlock('sansfaute');}
+function showFb(el,ok,html){el.className='fb show '+(ok===null?'info':ok?'ok':'ko');el.innerHTML=html;}
+
+/* ===================== 10. INTERACTIONS PÉDAGOGIQUES ===================== */
+function doMCQ(body,s,finish){
+  body.innerHTML=`${s.intro?`<p>${s.intro}</p>`:''}${s.log?`<pre tabindex="0" aria-label="Journal technique">${esc(s.log)}</pre>`:''}<p class="q" id="qq">${s.q}</p>
+  <div class="opts" role="group" aria-labelledby="qq">${s.o.map((o,i)=>`<button type="button" class="opt" data-i="${i}"><span class="letter" aria-hidden="true">${'ABCD'[i]}</span><span class="otext">${o.t}</span></button>`).join('')}</div>
+  <div class="fb" role="status" aria-live="polite"></div>`;
+  const fb=$('.fb',body),good=s.o.find(x=>x.ok);
+  $$('.opt',body).forEach(b=>b.addEventListener('click',()=>{const o=s.o[+b.dataset.i];
+    $$('.opt',body).forEach((x,i)=>{x.disabled=true;if(s.o[i].ok){x.classList.add('right');x.insertAdjacentHTML('beforeend','<span class="mark">✅ Bonne réponse</span>');}});
+    if(o.ok){right();if(s.badge)unlock(s.badge);}else{b.classList.add('wrong');b.insertAdjacentHTML('beforeend','<span class="mark">❌ Ton choix</span>');wrong(b);}
+    showFb(fb,!!o.ok,(o.ok?'<p><b>✅ Bravo !</b> ':'<p><b>❌ Pas tout à fait.</b> ')+o.fb+'</p>'+(o.ok?'':`<p><b>La bonne réponse :</b> ${good.t} — ${good.fb}</p>`)+(s.ex?`<p>💡 ${s.ex}</p>`:''));
+    finish(o.ok?10:0);}));
+}
+function doClassify(body,s,finish){let left=s.items.length,pts=0;
+  body.innerHTML=`<p>${s.intro}</p><ul class="cls">${s.items.map((it,i)=>`<li class="cl" id="cl${i}"><p id="clt${i}">${it.t}</p>
+   <div class="row" role="group" aria-labelledby="clt${i}">${s.cats.map(c=>`<button type="button" class="btn sm" data-i="${i}" data-c="${c}" aria-pressed="false">${c}</button>`).join('')}</div>
+   <div class="clfb" role="status" aria-live="polite"></div></li>`).join('')}</ul><div class="fb" role="status" aria-live="polite"></div>`;
+  $$('button[data-c]',body).forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.i,it=s.items[i],li=$('#cl'+i,body),ok=b.dataset.c===it.a;
+    $$('button',li).forEach(x=>{x.disabled=true;});b.setAttribute('aria-pressed','true');li.classList.add(ok?'good':'bad');if(ok){pts+=5;right();}else wrong(li);
+    $('.clfb',li).innerHTML=(ok?'✅ <b>Juste.</b> ':`❌ <b>Réponse attendue : ${it.a}.</b> `)+it.w;
+    if(--left===0){const n=pts/5;showFb($('.fb',body),n===s.items.length?true:null,`<b>${n} / ${s.items.length} bonnes réponses.</b> ${s.ex||''}`);finish(pts);}}));
+}
+function doMatch(body,s,finish){
+  body.innerHTML=`<p>${s.intro}</p><div>${s.rows.map((r,i)=>`<div class="mrow" id="mr${i}"><label for="ms${i}">${r.t}</label>
+   <select id="ms${i}"><option value="">— Choisir —</option>${s.choices.map(c=>`<option value="${esc(c)}">${esc(c)}</option>`).join('')}</select><div class="mfb" role="status" aria-live="polite"></div></div>`).join('')}</div>
+   <div class="row"><button type="button" class="btn pri" id="mcheck">Vérifier mes réponses</button></div><div class="fb" role="status" aria-live="polite"></div>`;
+  const fb=$('.fb',body);
+  $('#mcheck',body).addEventListener('click',()=>{const sel=s.rows.map((_,i)=>$('#ms'+i,body).value);
+    if(sel.some(v=>!v)){showFb(fb,null,'Complète toutes les lignes avant de vérifier 🙂');shake(fb);return;}
+    let n=0;s.rows.forEach((r,i)=>{const ok=sel[i]===r.a,row=$('#mr'+i,body);if(ok)n++;else shake(row);row.classList.add(ok?'good':'bad');$('#ms'+i,body).disabled=true;
+      $('.mfb',row).innerHTML=(ok?'✅ <b>Juste.</b> ':`❌ <b>Bonne réponse : ${esc(r.a)}.</b> `)+r.w;});
+    $('#mcheck',body).disabled=true;const perfect=n===s.rows.length;if(perfect){right();if(s.badge)unlock(s.badge);}else wrong(null);
+    showFb(fb,perfect?true:null,`<b>${n} / ${s.rows.length} associations correctes.</b> ${s.ex||''}`);finish(n*5);});
+}
+function doOrder(body,s,finish){let pool;do{pool=shuffle(s.items.map((t,i)=>({t,i})));}while(pool.every((p,k)=>p.i===k));let seq=[],checked=false;
+  body.innerHTML=`<p>${s.intro}</p><div class="order"><div><h3 class="h4">Étapes à placer</h3><div class="pool" id="pool"></div></div>
+   <div><h3 class="h4" id="seqT">Ton ordre</h3><ol class="seq" id="seq" aria-labelledby="seqT"></ol></div></div>
+   <div class="row"><button type="button" class="btn" id="undo">↶ Retirer la dernière</button><button type="button" class="btn pri" id="chk">Vérifier l’ordre</button></div><div class="fb" role="status" aria-live="polite"></div>`;
+  const draw=()=>{const rest=pool.filter(p=>!seq.includes(p.i));
+    $('#pool',body).innerHTML=rest.length?rest.map(p=>`<button type="button" class="btn" data-i="${p.i}" ${checked?'disabled':''}>＋ ${p.t}</button>`).join(''):'<p class="muted">Toutes les étapes sont placées.</p>';
+    $('#seq',body).innerHTML=seq.length?seq.map((i,k)=>`<li class="${checked?(i===k?'good':'bad'):''}">${s.items[i]}${checked?(i===k?' ✅':' ❌'):''}</li>`).join(''):'<li class="empty muted">Clique sur les étapes, dans l’ordre…</li>';
+    $('#undo',body).disabled=checked||!seq.length;$('#chk',body).disabled=checked||seq.length<s.items.length;
+    $$('#pool .btn',body).forEach(b=>b.addEventListener('click',()=>{seq.push(+b.dataset.i);draw();const nb=$('#pool .btn',body);(nb||$('#chk',body)).focus();}));};
+  $('#undo',body).addEventListener('click',()=>{seq.pop();draw();});
+  $('#chk',body).addEventListener('click',()=>{checked=true;const ok=seq.every((v,k)=>v===k);draw();if(ok)right();else wrong($('#seq',body));
+    showFb($('.fb',body),ok,ok?`<p><b>✅ Parfait !</b> ${s.ex}</p>`:`<p><b>❌ Pas tout à fait.</b> Le bon ordre :</p><ol>${s.items.map(t=>`<li>${t}</li>`).join('')}</ol><p>💡 ${s.ex}</p>`);finish(ok?10:0);});
+  draw();
+}
+function doExplore(body,s,finish){const seen=new Set();let playing=false;
+  body.innerHTML=`<div class="example">${s.intro}</div>
+   <div class="row"><button type="button" class="btn pri" id="play">▶ Suivre la commande pas à pas</button><span class="counter" id="cnt">Étapes découvertes : 0 / ${s.parts.length}</span></div>
+   <div class="bt-scene" role="group" aria-label="${s.label}">
+    <div class="bt-end"><span class="pi" aria-hidden="true">${s.from.ico}</span><span><b>${s.from.t}</b><br><small>${s.from.sub}</small></span></div>
+    <div class="bt-link">⬇ ${s.linkIn}</div>
+    <div class="bt-frame"><p class="bt-title">🏢 BizTalk Server</p><div class="bt-head" aria-hidden="true"><span>Étape (clique pour l’explication)</span><span>Dans notre exemple</span></div>
+     <ol class="bt-list">${s.parts.map((p,i)=>`<li class="bts" id="bts${i}"><button type="button" class="bts-btn" data-i="${i}" aria-expanded="false" aria-controls="btd${i}"><span class="num" aria-hidden="true">${i+1}</span><span class="pi" aria-hidden="true">${p.ico}</span><span><b>${p.t}</b><br><small>${p.sub}</small></span></button>
+      <div class="bts-msg"><span class="sr-only">Dans notre exemple : </span>${p.ex}</div><div class="bts-detail" id="btd${i}" hidden><p>${p.d}</p><p>🧠 <b>Image :</b> ${p.an}</p></div></li>`).join('')}</ol></div>
+    <div class="bt-link">⬇ ${s.linkOut}</div>
+    <div class="bt-end ok"><span class="pi" aria-hidden="true">${s.to.ico}</span><span><b>${s.to.t}</b><br><small>${s.to.sub}</small></span></div></div>
+   <div class="fb" role="status" aria-live="polite"></div>`;
+  const btns=$$('.bts-btn',body),setOpen=(i,on)=>{btns[i].setAttribute('aria-expanded',String(on));$('#btd'+i,body).hidden=!on;};
+  const mark=i=>{seen.add(i);$('#bts'+i,body).classList.add('seen');$('#cnt',body).textContent=`Étapes découvertes : ${seen.size} / ${s.parts.length}`;
+    if(seen.size===s.parts.length&&!body.dataset.ok){body.dataset.ok='1';sfx('ding');unlock('explorateur');
+      showFb($('.fb',body),true,'<b>🎉 Schéma exploré !</b> CSV reçu par SFTP → XML validé → tri dans la MessageBox → traduit en JSON → envoyé à l’API.');finish(0);}};
+  btns.forEach(b=>b.addEventListener('click',()=>{if(playing)return;const i=+b.dataset.i,on=b.getAttribute('aria-expanded')!=='true';setOpen(i,on);if(on)mark(i);}));
+  $('#play',body).addEventListener('click',async e=>{const pb=e.currentTarget;playing=true;pb.disabled=true;
+    for(let i=0;i<s.parts.length;i++){$$('.bts',body).forEach(x=>x.classList.remove('live'));const row=$('#bts'+i,body);row.classList.add('live');
+      s.parts.forEach((_,j)=>setOpen(j,j===i));mark(i);row.scrollIntoView({block:'nearest',behavior:calm()?'auto':'smooth'});await sleep(calm()?700:2300);}
+    $$('.bts',body).forEach(x=>x.classList.remove('live'));playing=false;pb.disabled=false;pb.textContent='↻ Revoir le trajet';});
+}
+function doBuilder(body,s,finish){let trig=null,acts=[],tries=0,over=false,busy=false;const name=(l,id)=>l.find(x=>x.id===id).t;
+  body.innerHTML=`<div class="example"><b>📋 La mission :</b> ${s.scenario}</div>
+   <fieldset><legend>1. Choisis le déclencheur</legend><div class="pool" id="trigs">${s.triggers.map(t=>`<button type="button" class="btn" data-t="${t.id}" aria-pressed="false">${t.t}</button>`).join('')}</div></fieldset>
+   <fieldset><legend>2. Ajoute les actions dans l’ordre (3 au maximum)</legend><div class="pool" id="acts">${s.actions.map(a=>`<button type="button" class="btn" data-a="${a.id}">＋ ${a.t}</button>`).join('')}</div></fieldset>
+   <h3 class="h4" id="wfT">Ton flux</h3><div class="wf" id="wf" role="group" aria-labelledby="wfT"></div>
+   <div class="row"><button type="button" class="btn" id="undoA">↶ Retirer la dernière action</button><button type="button" class="btn pri" id="test">▶ Tester mon flux</button></div>
+   <div class="fb" role="status" aria-live="polite"></div>`;
+  const wf=$('#wf',body),fb=$('.fb',body);
+  const drawFlow=()=>{wf.className='wf';if(!trig){wf.innerHTML='<span class="muted">Ton flux est vide : choisis un déclencheur.</span>';return;}
+    wf.innerHTML=`<span class="blk trig">⚡ ${name(s.triggers,trig)}</span>`+acts.map(a=>`<span class="wa" aria-hidden="true">➜</span><span class="blk">${name(s.actions,a)}</span>`).join('')+`<span class="wa" aria-hidden="true">➜</span><span class="blk end">🏭 ERP de Maison COCO</span>`;};
+  const sync=()=>{const lock=over||busy;$$('#trigs .btn',body).forEach(b=>{b.setAttribute('aria-pressed',String(b.dataset.t===trig));b.disabled=lock;});
+    $$('#acts .btn',body).forEach(b=>{b.disabled=lock||acts.includes(b.dataset.a)||acts.length>=3;});$('#undoA',body).disabled=lock||!acts.length;$('#test',body).disabled=lock||!trig||!acts.length;};
+  const edit=()=>{fb.className='fb';fb.innerHTML='';drawFlow();sync();};
+  $$('#trigs .btn',body).forEach(b=>b.addEventListener('click',()=>{trig=b.dataset.t;edit();}));
+  $$('#acts .btn',body).forEach(b=>b.addEventListener('click',()=>{acts.push(b.dataset.a);edit();}));
+  $('#undoA',body).addEventListener('click',()=>{acts.pop();edit();});
+  $('#test',body).addEventListener('click',async()=>{busy=true;fb.className='fb';fb.innerHTML='';drawFlow();sync();
+    const r=s.check(trig,acts),blocks=$$('.blk',wf),arrows=$$('.wa',wf),d=calm()?150:650,failLabel=r.ok?'':blocks[r.at].textContent;
+    for(let i=0;i<blocks.length;i++){const b=blocks[i];
+      b.classList.add('active');b.insertAdjacentHTML('beforeend','<span class="tok" aria-hidden="true">📄</span>');await sleep(d);b.classList.remove('active');
+      if(!r.ok&&i===r.at){b.classList.add('fail');$('.tok',b).textContent='💥';wf.classList.add('ko');blocks.slice(i+1).forEach(x=>x.classList.add('off'));arrows.slice(i).forEach(x=>x.classList.add('off'));break;}
+      b.classList.add('pass');const tk=$('.tok',b);if(tk)tk.remove();if(arrows[i]){arrows[i].classList.add('go');await sleep(d/2);}}
+    busy=false;
+    if(r.ok){over=true;wf.classList.add('okk');blocks[blocks.length-1].textContent='🏭 ERP : prix mis à jour';right();unlock('batisseur');if(!tries)unlock('ingenieur');
+      showFb(fb,true,`<p>${s.success}</p>${tries?'<p class="muted">Réussi après plusieurs essais : 5 points sur 10.</p>':''}`);finish(tries?5:10);}
+    else{tries++;wrong(wf);showFb(fb,false,`<p><b>❌ Le flux s’arrête à « ${esc(failLabel)} ».</b> ${r.msg}</p><p>Modifie ton flux, puis teste à nouveau.</p>`);}
+    sync();});
+  drawFlow();sync();
+}
+
+/* ===================== 11. ARCADE « CENTRE DE TRI » ===================== */
+const DEST=[{id:'ent',ico:'🏭',t:'Entrepôt'},{id:'cpt',ico:'💶',t:'Compta'},{id:'trp',ico:'🚚',t:'Transporteur'},{id:'crm',ico:'👥',t:'CRM'}];
+const ARC=[
+ {ico:'📦',t:'Commande web CMD-1042',v:'API · JSON',d:'ent',w:'une commande est préparée par l’entrepôt.'},
+ {ico:'🧾',t:'Facture FAC-2041',v:'SFTP · XML',d:'cpt',w:'les factures sont gérées par la comptabilité.'},
+ {ico:'🏷️',t:'Colis prêt à enlever',v:'API · JSON',d:'trp',w:'le transporteur vient chercher les colis prêts.'},
+ {ico:'👤',t:'Nouvelle cliente inscrite',v:'API · JSON',d:'crm',w:'le CRM gère les fiches clientes.'},
+ {ico:'💳',t:'Paiement encaissé',v:'API · JSON',d:'cpt',w:'un encaissement s’enregistre en comptabilité.'},
+ {ico:'🔁',t:'Réassort boutique de Lyon',v:'SFTP · CSV',d:'ent',w:'l’entrepôt prépare le réassort des boutiques.'},
+ {ico:'📍',t:'Demande de suivi de colis',v:'API · JSON',d:'trp',w:'c’est le transporteur qui sait où est le colis.'},
+ {ico:'🏠',t:'Changement d’adresse cliente',v:'API · JSON',d:'crm',w:'l’adresse fait partie de la fiche cliente.'},
+ {ico:'↩️',t:'Retour d’un sac à réceptionner',v:'API · JSON',d:'ent',w:'l’entrepôt réceptionne et contrôle les retours.'},
+ {ico:'💶',t:'Avoir de remboursement',v:'SFTP · CSV',d:'cpt',w:'un avoir est une écriture comptable.'},
+ {ico:'💌',t:'Inscription à la newsletter',v:'API · JSON',d:'crm',w:'les préférences de contact sont dans le CRM.'},
+ {ico:'🗺️',t:'Tournée de livraison du jour',v:'SFTP · CSV',d:'trp',w:'le planning de livraison relève du transporteur.'},
+ {ico:'📊',t:'Ventes du jour (batch)',v:'SFTP · CSV',d:'cpt',w:'les ventes du jour alimentent la comptabilité.'},
+ {ico:'🧣',t:'Préparer 3 foulards',v:'API · JSON',d:'ent',w:'préparer des articles, c’est le métier de l’entrepôt.'}];
+let A=null;
+function arcRender(){$('#arcScore').textContent=A?A.score:0;const l=A?A.lives:3;$('#arcLives').textContent='❤️'.repeat(Math.max(0,l))+'🖤'.repeat(3-Math.max(0,l));
+  $('#arcLives').setAttribute('aria-label',`Vies restantes : ${Math.max(0,l)}`);$('#arcBest').textContent=S.arcBest;}
+function arcOpen(){if(S.unlocked<2){sfx('buzz');shake($('#arcBtn'));announce('🔒 L’arcade se débloque à la fin du chapitre 2.');return;}
+  $('#bins').innerHTML=DEST.map((d,i)=>`<button type="button" class="bin" data-bin="${i}"><kbd>${i+1}</kbd><span class="pi" aria-hidden="true">${d.ico}</span>${d.t}</button>`).join('');
+  arcStop();A=null;arcRender();
+  const o=$('#arcOver');o.innerHTML='<p style="font-size:1.5rem;font-weight:800;margin:0">🕹️ Prêt·e ?</p><p>Les messages de Maison COCO tombent du ciel.<br>Trie-les : <b>1</b> Entrepôt · <b>2</b> Compta · <b>3</b> Transporteur · <b>4</b> CRM.<br>3 erreurs et c’est fini. Ça accélère !</p>';o.hidden=false;
+  $('#arcStart').textContent='▶ Jouer';openDlg($('#dlgArcade'));$('#arcStart').focus();}
+function arcStart(){arcStop();A={run:true,score:0,lives:3,speed:50,errors:[],deck:[],busy:false,y:0,item:null,last:0,raf:0};
+  $('#arcOver').hidden=true;$('#arcStart').disabled=true;arcRender();arcSpawn();A.raf=requestAnimationFrame(arcLoop);}
+function arcSpawn(){if(!A.deck.length)A.deck=shuffle(ARC);A.item=A.deck.pop();const m=$('#arcMsg');
+  m.className='arc-msg';m.style.left='50%';m.style.top='0px';m.innerHTML=`${A.item.ico} ${A.item.t}<small>${A.item.v}</small>`;m.hidden=false;
+  A.y=0;A.last=0;A.busy=false;$('#arcLive').textContent=`Nouveau message : ${A.item.t}`;}
+function arcLoop(t){if(!A||!A.run)return;if(!A.last)A.last=t;const dt=Math.min(100,t-A.last);A.last=t;
+  if(!A.busy){const m=$('#arcMsg'),floor=$('#arena').clientHeight-m.offsetHeight-8;A.y+=A.speed*dt/1000;
+    if(A.y>=floor){A.y=floor;m.style.top=A.y+'px';arcResolve(-1);}else m.style.top=A.y+'px';}
+  A.raf=requestAnimationFrame(arcLoop);}
+function arcChoose(i){if(!A||!A.run||A.busy)return;A.busy=true;const m=$('#arcMsg'),ar=$('#arena').getBoundingClientRect(),br=$$('.bin')[i].getBoundingClientRect();
+  m.classList.add('fly');m.style.left=(br.left+br.width/2-ar.left)+'px';m.style.top=(ar.height-m.offsetHeight-8)+'px';setTimeout(()=>arcResolve(i),calm()?0:260);}
+function arcResolve(i){if(!A||!A.run)return;A.busy=true;const it=A.item,d=DEST.findIndex(x=>x.id===it.d),m=$('#arcMsg'),ok=i===d,bins=$$('.bin');
+  if(ok){A.score++;A.speed=Math.min(230,A.speed+7);sfx('ding');m.classList.add('okm');bins[i].classList.add('okb');
+    if(A.score===10)unlock('trieur');if(A.score===25)unlock('maitretri');$('#arcLive').textContent='Bien trié !';}
+  else{A.lives--;sfx('buzz');shake($('#arena'));m.classList.add('kom');if(i>=0)bins[i].classList.add('kob');bins[d].classList.add('okb');
+    A.errors.push(`${it.ico} <b>${esc(it.t)}</b> → ${DEST[d].ico} ${DEST[d].t}${i<0?' (tombé au sol)':''} : ${it.w}`);
+    $('#arcLive').textContent=`Raté : ${it.t} allait vers ${DEST[d].t}.`;}
+  arcRender();
+  setTimeout(()=>{bins.forEach(b=>b.classList.remove('okb','kob'));if(!A||!A.run)return;if(A.lives<=0)arcEnd();else arcSpawn();},ok?250:900);}
+function arcEnd(){A.run=false;cancelAnimationFrame(A.raf);$('#arcMsg').hidden=true;const rec=A.score>S.arcBest;if(rec){S.arcBest=A.score;save();}arcRender();
+  $('#arcStart').disabled=false;$('#arcStart').textContent='↻ Rejouer';
+  const o=$('#arcOver');o.innerHTML=`<p style="font-size:1.5rem;font-weight:800;margin:0">Partie terminée !</p><p>Score : <b>${A.score}</b> ${rec?'🏆 Nouveau record !':'· Record : '+S.arcBest}</p>${A.errors.length?`<div class="arc-err"><b>À retenir :</b><ul>${A.errors.slice(-4).map(e=>`<li>${e}</li>`).join('')}</ul></div>`:''}`;o.hidden=false;
+  if(rec&&A.score>0){sfx('fanfare');confetti();}announce(`Partie terminée : ${A.score} messages bien triés.`);}
+function arcStop(){if(A){A.run=false;cancelAnimationFrame(A.raf);}$('#arcMsg').hidden=true;$('#arcStart').disabled=false;}
+
+/* ===================== 12. BILAN ET CERTIFICAT DELUXE ===================== */
+function grade(){const sc=score(),note=TOTAL?Math.round(sc/TOTAL*200)/10:0;
+  return{sc,note,pct:TOTAL?Math.round(sc/TOTAL*100):0,mention:note>=16?'Très bien':note>=14?'Bien':note>=12?'Assez bien':note>=10?'Passable':null};}
+const fmt=n=>n.toLocaleString('fr-FR',{minimumFractionDigits:1,maximumFractionDigits:1});
+/** Phrase personnalisée selon le style de jeu */
+function styleLine(g){if(S.eggs.length>=3)return'Chasseur·se de secrets : rien ne t’échappe 🕵️';if(S.arcBest>=25)return'Rapide comme une API ⚡';
+  if(g.note>=18)return'Précis·e comme un schéma bien validé 🎯';if(S.terms.length>=15)return'Curieux·se comme un connecteur 🔎';return'Patient·e et fiable comme un batch nocturne 🌙';}
+function renderFinal(body){unlock('diplome');const g=grade();
+  const rows=CH.map((c,i)=>{const mx=c.steps.reduce((a,s)=>a+maxPts(s),0);if(!mx)return '';const got=c.steps.reduce((a,_,j)=>a+(S.pts[i+'-'+j]||0),0);return `<tr><th scope="row">${c.icon} ${c.title}</th><td>${got} / ${mx}</td></tr>`;}).join('');
+  body.innerHTML=`<div class="no-print"><div class="final-score">${fmt(g.note)} / 20</div>
+   <p style="text-align:center">${g.sc} / ${TOTAL} points de parcours (${g.pct} %) · Mention : <b>${g.mention||'—'}</b><br>🥚 Bonus secrets : <b>+${bonus()} pts</b> (${S.eggs.length}/${EGGS.length}) · 🕹️ Record arcade : <b>${S.arcBest}</b> · 🏅 <b>${S.badges.length}/${BADGES.length}</b></p>
+   <table><caption class="sr-only">Points par chapitre</caption><thead><tr><th scope="col">Chapitre</th><th scope="col">Points</th></tr></thead><tbody>${rows}</tbody></table>
+   <h3>Les 5 idées à retenir</h3><ol><li>Une <b>couche d’intégration</b> connecte, transforme, route, orchestre et surveille.</li><li>Une <b>plateforme centrale</b> évite le « spaghetti » du point-à-point.</li>
+   <li><b>API</b> = réponse immédiate ; <b>SFTP</b> = fichier traité plus tard.</li><li><b>BizTalk</b> = intégration sur site ; 2020 est la dernière version.</li><li><b>iPaaS</b> = intégration en service cloud (ex. Azure Logic Apps).</li></ol>
+   <h3>📜 Ton certificat deluxe</h3><p class="muted">Note sur 20 calculée sur les points du parcours (les bonus apparaissent à part). Mentions : Très bien ≥ 16, Bien ≥ 14, Assez bien ≥ 12, Passable ≥ 10.</p>
+   <label for="nm"><b>Ton prénom et ton nom</b></label>
+   <div class="row" style="margin-top:.3rem"><input type="text" id="nm" maxlength="60" autocomplete="name" placeholder="Ex. : Léa Martin" value="${esc(S.name)}" style="max-width:420px"><button type="button" class="btn pri" id="gen">Générer mon certificat</button></div>
+   <div class="row"><button type="button" class="btn" id="again">🔁 Recommencer à zéro</button></div></div><div id="certZone"></div>`;
+  $('#gen',body).addEventListener('click',()=>{const inp=$('#nm',body),n=inp.value.trim();if(!n){wrong(inp);announce('✍️ Indique d’abord ton nom');inp.focus();return;}
+    S.name=n;save();unlock('certifie');drawCert();sfx('fanfare');confetti();say('Voici ton certificat deluxe ! 📜','party');$('#certZone').scrollIntoView({behavior:calm()?'auto':'smooth'});});
+  $('#again',body).addEventListener('click',resetAll);
+  if(S.name&&S.badges.includes('certifie'))drawCert();}
+function drawCert(){const g=grade(),date=new Date(),dStr=date.toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'});
+  let h=0;for(const ch of S.name+dStr)h=(h*31+ch.charCodeAt(0))%10000;
+  const num=`IQ-${date.getFullYear()}${String(date.getMonth()+1).padStart(2,'0')}${String(date.getDate()).padStart(2,'0')}-${String(h).padStart(4,'0')}`;
+  const icons=S.badges.map(id=>BADGES.find(b=>b.id===id)).filter(Boolean).map(b=>b.ico).join(' ');
+  $('#certZone').innerHTML=`<div class="cert" role="region" aria-label="Certificat de ${esc(S.name)}">
+   <span class="orn tl" aria-hidden="true">❦</span><span class="orn tr" aria-hidden="true">❦</span><span class="orn bl" aria-hidden="true">❦</span><span class="orn br" aria-hidden="true">❦</span>
+   <div class="cert-top"><div class="cert-plug">${PLUG}</div><div><p class="sub">${g.mention?'Certificat de réussite':'Attestation de participation'}</p><h2>Intégra’Quest</h2><p class="edition">Édition Deluxe · Académie de l’intégration Maison COCO</p></div><div class="cert-plug flip">${PLUG}</div></div>
+   <p>Ce document atteste que</p><div class="name">${esc(S.name)}</div>
+   <p>a suivi le parcours <b>« Comprendre les couches d’intégration : API, SFTP, BizTalk et iPaaS »</b></p>
+   ${g.mention?`<div class="ribbon">Mention ${g.mention}</div>`:''}
+   <div class="stats"><div><b>${fmt(g.note)} / 20</b><span>Note finale</span></div><div><b>${g.sc} / ${TOTAL}</b><span>Points (${g.pct} %)</span></div>
+    <div><b>+${bonus()}</b><span>Bonus secrets (${S.eggs.length}/${EGGS.length})</span></div><div><b>${S.arcBest}</b><span>Record arcade</span></div><div><b>${S.badges.length} / ${BADGES.length}</b><span>Badges</span></div></div>
+   <p class="cstyle">✨ Style de jeu : <b>${styleLine(g)}</b></p>
+   ${icons?`<p class="brow" aria-label="Badges obtenus">${icons}</p>`:''}
+   <div class="foot"><span style="text-align:left">Délivré le <b>${dStr}</b><br><small>N° ${num}</small></span><div class="seal" aria-hidden="true">🏅</div>
+    <span style="text-align:right">Plug 🔌, guide officiel<br><small>Académie de l’intégration – Maison COCO</small></span></div></div>
+  <div class="row no-print" style="justify-content:center"><button type="button" class="btn pri" id="printCert">🖨️ Imprimer / Enregistrer en PDF</button></div>
+  <p class="muted no-print" style="text-align:center">Astuce : choisis « Enregistrer au format PDF » comme imprimante.</p>`;
+  $('#printCert').addEventListener('click',()=>window.print());}
+function resetAll(){if(!confirm('Effacer toute ta progression (points, badges, secrets, certificat) ?'))return;
+  const p=S.prefs;S=fresh();S.prefs=p;save();closeDlg($('#dlgPrefs'));renderAll(true);announce('Progression effacée. C’est reparti !');}
+
+/* ===================== 13. PLUG DÉPLAÇABLE ET LANÇABLE ===================== */
+let drag=null,fly=null,physRaf=0,homeT=0,noClick=false;
+function hideHome(h){const b=$('#plugBtn');if(b)b.style.visibility=h?'hidden':'';}
+function startDrag(){if(!drag||drag.on)return;drag.on=true;noClick=true;cancelAnimationFrame(physRaf);clearTimeout(homeT);
+  if(!fly){const b=$('#plugBtn');if(!b){drag=null;return;}const r=b.getBoundingClientRect();
+    fly=document.createElement('div');fly.className='flyplug';fly.setAttribute('aria-hidden','true');fly.innerHTML=PLUG;
+    fly.style.left=r.left+'px';fly.style.top=r.top+'px';document.body.appendChild(fly);hideHome(true);}
+  fly.style.transition='none';drag.ox=drag.lx-parseFloat(fly.style.left);drag.oy=drag.ly-parseFloat(fly.style.top);
+  fly.style.transform='scale(1.15)';drag.pts=[[drag.lx,drag.ly,performance.now()]];say('Wouhou ! Lance-moi ! 🚀','happy');}
+document.addEventListener('pointerdown',e=>{const t=e.target.closest('#plugBtn,.flyplug');if(!t||e.button>0)return;
+  drag={x0:e.clientX,y0:e.clientY,lx:e.clientX,ly:e.clientY,on:false,pts:[]};
+  if(t.classList.contains('flyplug')){e.preventDefault();startDrag();}else drag.timer=setTimeout(startDrag,350);});
+window.addEventListener('pointermove',e=>{if(!drag)return;drag.lx=e.clientX;drag.ly=e.clientY;
+  if(!drag.on&&Math.hypot(e.clientX-drag.x0,e.clientY-drag.y0)>6)startDrag();
+  if(drag&&drag.on&&fly){fly.style.left=(e.clientX-drag.ox)+'px';fly.style.top=(e.clientY-drag.oy)+'px';
+    drag.pts.push([e.clientX,e.clientY,performance.now()]);if(drag.pts.length>6)drag.pts.shift();}});
+function endDrag(){if(!drag)return;clearTimeout(drag.timer);const d=drag;drag=null;if(!d.on||!fly)return;setTimeout(()=>{noClick=false;},80);
+  const a=d.pts[0],b=d.pts[d.pts.length-1],dt=Math.max(16,b[2]-a[2]),stale=performance.now()-b[2]>120;
+  let vx=stale?0:(b[0]-a[0])/dt*16.7,vy=stale?0:(b[1]-a[1])/dt*16.7;const sp=Math.hypot(vx,vy);if(sp>45){vx*=45/sp;vy*=45/sp;}
+  fly.style.transform='';if(sp>18)egg('lancer','Plug volant : tu l’as lancé à travers l’écran !');throwPlug(vx,vy);}
+window.addEventListener('pointerup',endDrag);window.addEventListener('pointercancel',endDrag);
+function boing(v){if(S.prefs.sound&&Math.abs(v)>4)tone(220+Math.min(600,Math.abs(v)*20),0,.08,'square',.06);}
+/** Physique simple : gravité, rebonds sur les bords, frottements */
+function throwPlug(vx,vy){if(!fly)return;if(calm()){homeT=setTimeout(goHome,1200);return;}
+  let x=parseFloat(fly.style.left),y=parseFloat(fly.style.top),rot=0,rest=0,last=performance.now();
+  const step=t=>{if(!fly)return;const k=Math.min(2,(t-last)/16.7);last=t;vy+=.7*k;vx*=Math.pow(.995,k);x+=vx*k;y+=vy*k;rot+=vx*1.5*k;
+    const mx=innerWidth-56,my=innerHeight-64;
+    if(x<0){x=0;vx=-vx*.75;boing(vx);}else if(x>mx){x=mx;vx=-vx*.75;boing(vx);}
+    if(y<0){y=0;vy=-vy*.75;boing(vy);}else if(y>my){y=my;boing(vy);vy=-vy*.6;vx*=.9;}
+    fly.style.left=x+'px';fly.style.top=y+'px';fly.style.transform=`rotate(${(rot%360).toFixed(1)}deg)`;
+    rest=(y>=my-1&&Math.abs(vy)<1.5&&Math.abs(vx)<.5)?rest+1:0;
+    if(rest>15){fly.style.transform='';say('Ouf ! Je retourne à ma place… 😵‍💫');homeT=setTimeout(goHome,1500);return;}
+    physRaf=requestAnimationFrame(step);};
+  physRaf=requestAnimationFrame(step);}
+function goHome(){if(!fly)return;const f=fly,b=$('#plugBtn');const done=()=>{f.remove();if(fly===f)fly=null;hideHome(false);};
+  if(!b||calm()){done();return;}const r=b.getBoundingClientRect();f.style.transition='left .7s ease,top .7s ease';f.style.left=r.left+'px';f.style.top=r.top+'px';homeT=setTimeout(done,750);}
+
+/* ===================== 14. EASTER EGGS CLAVIER ET LOGO ===================== */
+const KONAMI=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'];
+let kbuf=[],tbuf='',lc=0,lt=0;
+function disco(){const h=document.documentElement;h.classList.add('disco');clearTimeout(disco.t);disco.t=setTimeout(()=>h.classList.remove('disco'),6500);
+  playTune(DISCO,'square',.06);confetti(['🪩','✨','🎶','🕺','💃']);say('🕺 Disco time ! Plug ne sait pas résister…','party');egg('konami','Code Konami : Plug danse le disco !');}
+function superPlug(){const h=document.documentElement;h.classList.add('jumpy');clearTimeout(superPlug.t);superPlug.t=setTimeout(()=>h.classList.remove('jumpy'),3500);
+  playTune(SUPER,'square',.06);confetti(['⭐','🪙','🔌','✨']);say('🎮 Thème 8-bit de <b>Super Plug</b> !','happy');egg('ipaas','« ipaas » : le thème 8-bit de Super Plug !');}
+document.addEventListener('keydown',e=>{const tg=e.target;if(tg&&(/^(INPUT|TEXTAREA|SELECT)$/.test(tg.tagName)||tg.isContentEditable))return;
+  const k=e.key.length===1?e.key.toLowerCase():e.key;
+  kbuf.push(k);kbuf=kbuf.slice(-10);if(kbuf.join()===KONAMI.join()){kbuf=[];disco();}
+  if(k.length===1){tbuf=(tbuf+k).slice(-5);if(tbuf==='ipaas'){tbuf='';superPlug();}}});
+$('#logo').addEventListener('click',()=>{const n=Date.now();lc=(n-lt<1500)?lc+1:1;lt=n;
+  if(lc>=10){lc=0;sfx('fanfare');confetti(['🧣','👜','💄','👠','🎀']);egg('logo','Pluie d’accessoires Maison COCO !');}});
+
+/* ===================== 15. NAVIGATION ET AFFICHAGE ===================== */
+const nav=$('#nav'),main=$('#main');
+function renderHeader(){const d=ALL.filter(k=>S.done[k]).length,p=Math.round(d/ALL.length*100);
+  $('#scoreP').textContent=`⭐ ${total()} pts`;$('#badgeN').textContent=`${S.badges.length}/${BADGES.length}`;
+  $('#openBadges').setAttribute('aria-label',`Mes badges : ${S.badges.length} sur ${BADGES.length}`);
+  $('#arcBtn').textContent=S.unlocked>=2?'🕹️ Arcade':'🔒 Arcade';
+  $('#progFill').style.width=p+'%';$('#progBar').setAttribute('aria-valuenow',String(p));$('#progLabel').textContent=`Progression : ${p} %`;
+  const sb=$('#sndBtn');sb.textContent=S.prefs.sound?'🔊 Son':'🔇 Son';sb.setAttribute('aria-pressed',String(S.prefs.sound));
+  const mb=$('#musBtn');mb.textContent=S.prefs.music?'🎵 On':'🎵 Off';mb.setAttribute('aria-pressed',String(S.prefs.music));mb.setAttribute('aria-label','Musique 8-bit');}
+function renderNav(){nav.innerHTML='<ol>'+CH.map((c,i)=>{const locked=i>S.unlocked,complete=c.steps.every((_,j)=>S.done[i+'-'+j]),cur=i===S.pos.c;
+    return `<li><button type="button" class="chap ${cur?'cur':''}" data-ch="${i}" ${locked?'aria-disabled="true"':''} ${cur?'aria-current="step"':''}><span class="ci" aria-hidden="true">${locked?'🔒':complete?'✅':c.icon}</span><span><small>Chapitre ${i+1}</small><br>${c.title}</span><span class="sr-only">${locked?' (verrouillé)':complete?' (terminé)':''}</span></button></li>`;}).join('')+'</ol>';
+  $$('.chap',nav).forEach(b=>b.addEventListener('click',()=>{const i=+b.dataset.ch;
+    if(i>S.unlocked){sfx('buzz');shake(b);announce('🔒 Ce chapitre se débloquera après le précédent.');return;}
+    const f=CH[i].steps.findIndex((_,j)=>!S.done[i+'-'+j]);S.pos={c:i,s:f<0?0:f};save();renderNav();renderStep(true);}));}
+function renderStep(focus){const ci=S.pos.c,si=S.pos.s,c=CH[ci],s=c.steps[si],k=ci+'-'+si,last=si===c.steps.length-1;
+  const guide=s.guide||(isInteractive(s)?'À toi de jouer ! 💪':'Lis tranquillement, puis clique sur « Suivant ».');
+  main.innerHTML=`<p class="eyebrow">${c.icon} Chapitre ${ci+1} sur ${CH.length} · ${c.title} — étape ${si+1} sur ${c.steps.length}</p><h2 id="stepTitle" tabindex="-1">${s.title}</h2>
+   <div class="guide"><button type="button" class="plug" id="plugBtn" aria-label="Plug, ton guide : clique pour une astuce">${PLUG}</button><p id="guideTxt">${SR}${guide}</p></div>
+   <div id="body"></div><div class="navrow"><button type="button" class="btn" id="prev" ${ci===0&&si===0?'disabled':''}>← Précédent</button><span class="hint" id="hint"></span>
+   ${s.type==='final'?'':`<button type="button" class="btn pri" id="next">${last?'Terminer le chapitre ✔':'Suivant →'}</button>`}</div>`;
+  if(fly)hideHome(true);
+  const body=$('#body'),next=$('#next'),hint=$('#hint');
+  const finish=p=>{if(!S.done[k]){S.done[k]=1;S.pts[k]=p||0;save();checkChapter(ci);}if(next)next.disabled=false;hint.textContent='';renderHeader();};
+  if(isInteractive(s)){if(S.done[k])hint.textContent='Étape déjà faite : tes points sont conservés.';else if(next){next.disabled=true;hint.textContent='Réponds pour pouvoir continuer.';}}
+  switch(s.type){case 'lesson':body.innerHTML=s.html;if(s.init)s.init(body);finish();break;case 'mcq':doMCQ(body,s,finish);break;case 'classify':doClassify(body,s,finish);break;
+    case 'match':doMatch(body,s,finish);break;case 'order':doOrder(body,s,finish);break;case 'explore':doExplore(body,s,finish);break;case 'builder':doBuilder(body,s,finish);break;
+    case 'final':finish();renderFinal(body);break;}
+  $('#prev').addEventListener('click',goPrev);if(next)next.addEventListener('click',goNext);
+  if(focus){$('#stepTitle').focus({preventScroll:true});window.scrollTo(0,0);}}
+function goNext(){const ci=S.pos.c,c=CH[ci];
+  if(S.pos.s<c.steps.length-1)S.pos.s++;
+  else if(ci<CH.length-1){S.unlocked=Math.max(S.unlocked,ci+1);S.pos={c:ci+1,s:0};sfx('ding');
+    announce(`✅ Chapitre ${ci+1} terminé ! « ${CH[ci+1].title} » est débloqué.${ci===1?' 🕹️ L’arcade aussi !':''}`);}
+  save();renderNav();renderStep(true);renderHeader();}
+function goPrev(){if(S.pos.s>0)S.pos.s--;else if(S.pos.c>0){S.pos.c--;S.pos.s=CH[S.pos.c].steps.length-1;}save();renderNav();renderStep(true);}
+function renderAll(focus){applyPrefs();renderNav();renderStep(focus);renderHeader();}
+
+/* ===================== 16. FENÊTRES, OPTIONS, ÉVÉNEMENTS ===================== */
+function openDlg(d){if(typeof d.showModal==='function'){if(!d.open)d.showModal();}else d.setAttribute('open','');}
+function closeDlg(d){if(!d)return;if(typeof d.close==='function'){if(d.open)d.close();}else{d.removeAttribute('open');d.dispatchEvent(new Event('close'));}}
+function showDef(id){const g=GL[id];
+  $('#gDef').innerHTML=g?`<h3>${esc(g.t)}</h3><p>${esc(g.d)}</p>${g.ex?`<p><b>Exemple :</b> ${esc(g.ex)}</p>`:''}`:'<p class="muted">Choisis un terme dans la liste.</p>';
+  if(g&&!S.terms.includes(id)){S.terms.push(id);save();if(S.terms.length>=5)unlock('curieux');if(S.terms.length>=15)unlock('encyclo');drawGlist();}}
+function drawGlist(){const f=norm($('#gSearch').value);const keys=Object.keys(GL).sort((a,b)=>GL[a].t.localeCompare(GL[b].t,'fr')).filter(k=>norm(GL[k].t+' '+GL[k].d).includes(f));
+  $('#gList').innerHTML=keys.length?keys.map(k=>`<button type="button" data-def="${k}" class="${S.terms.includes(k)?'seen':''}">${S.terms.includes(k)?'✅ ':''}${esc(GL[k].t)}</button>`).join(''):'<p class="muted">Aucun terme trouvé.</p>';}
+function openGloss(id){$('#gSearch').value='';drawGlist();showDef(id);openDlg($('#dlgGloss'));if(id)$('#gDef').focus();else $('#gSearch').focus();}
+function openBadges(){$('#bGrid').innerHTML=BADGES.map(b=>{const on=S.badges.includes(b.id);return `<div class="badge ${on?'on':'off'}"><span class="ico" aria-hidden="true">${b.ico}</span><b>${b.t}</b><br><span class="muted">${b.d}</span><br><small>${on?'✅ Obtenu':'🔒 À gagner'}</small></div>`;}).join('');
+  $('#eggList').innerHTML=`<h3>🥚 Secrets trouvés : ${S.eggs.length} / ${EGGS.length} (+${EGG_PTS} pts chacun)</h3><ul>${EGGS.map(e=>`<li>${S.eggs.includes(e.id)?'✅ <b>'+e.t+'</b>':'❔ '+e.h}</li>`).join('')}</ul>`;
+  openDlg($('#dlgBadges'));}
+function applyPrefs(){const h=document.documentElement;h.classList.toggle('big',!!S.prefs.big);h.classList.toggle('contrast',!!S.prefs.contrast);h.classList.toggle('calm',!!S.prefs.calm);
+  $('#pBig').checked=!!S.prefs.big;$('#pCon').checked=!!S.prefs.contrast;$('#pCalm').checked=!!S.prefs.calm;$('#pSnd').checked=!!S.prefs.sound;$('#pMus').checked=!!S.prefs.music;}
+[['pBig','big'],['pCon','contrast'],['pCalm','calm'],['pSnd','sound'],['pMus','music']].forEach(([id,key])=>$('#'+id).addEventListener('change',e=>{S.prefs[key]=e.target.checked;save();applyPrefs();renderHeader();syncMusic();}));
+$('#sndBtn').addEventListener('click',()=>{S.prefs.sound=!S.prefs.sound;save();applyPrefs();renderHeader();syncMusic();if(S.prefs.sound)sfx('ding');});
+$('#musBtn').addEventListener('click',()=>{S.prefs.music=!S.prefs.music;if(S.prefs.music&&!S.prefs.sound)S.prefs.sound=true;save();applyPrefs();renderHeader();syncMusic();});
+$('#openGloss').addEventListener('click',()=>openGloss(null));
+$('#openBadges').addEventListener('click',openBadges);
+$('#arcBtn').addEventListener('click',arcOpen);
+$('#arcStart').addEventListener('click',arcStart);
+$('#bins').addEventListener('click',e=>{const b=e.target.closest('.bin');if(b)arcChoose(+b.dataset.bin);});
+$('#dlgArcade').addEventListener('keydown',e=>{const n=+e.key;if(n>=1&&n<=4){e.preventDefault();arcChoose(n-1);}});
+$('#dlgArcade').addEventListener('close',arcStop);
+$('#openPrefs').addEventListener('click',()=>openDlg($('#dlgPrefs')));
+$('#resetAll').addEventListener('click',resetAll);
+$('#gSearch').addEventListener('input',drawGlist);
+document.addEventListener('click',e=>{
+  const t=e.target.closest('.term');if(t){openGloss(t.dataset.term);return;}
+  const d=e.target.closest('[data-def]');if(d){showDef(d.dataset.def);$('#gDef').focus();return;}
+  const c=e.target.closest('[data-close]');if(c){closeDlg(c.closest('dialog'));return;}
+  if(e.target.closest('#plugBtn')){if(noClick)return;S.clicks++;save();say('💡 '+pick(TIPS),'happy');if(S.clicks>=5)unlock('ami');return;}
+  if(e.target.tagName==='DIALOG')closeDlg(e.target);});
+/* La musique ne peut démarrer qu’après une première interaction (règle des navigateurs) */
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>syncMusic(),{once:true}));
+
+/* ===================== 17. DÉMARRAGE ===================== */
+renderAll(false);
+})();
+</script>
+</body>
+</html>
