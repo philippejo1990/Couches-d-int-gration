@@ -1,1 +1,7 @@
 # Couches-d-int-gration
+Demande	Ce qui a été fait
+🕹️ Mini-jeu d'arcade « Centre de tri »	Bouton Arcade en haut, débloqué après le chapitre 2. Des messages de Maison COCO tombent (commande, facture, réassort de Lyon…). Il faut les envoyer vers Entrepôt, Compta, Transporteur ou CRM, en cliquant ou avec les touches 1 à 4. Le jeu accélère, il y a 3 vies, un record et des badges à 10 et 25 messages. En fin de partie, chaque erreur est expliquée
+🎵 Musique 8-bit	Mélodie originale en boucle, créée dans le navigateur sans fichier audio. Bouton 🎵 dans l'en-tête ou dans ⚙️ Options
+🥚 Easter eggs (+30 points chacun)	1. Code Konami (↑↑↓↓←→←→BA) : Plug danse le disco, avec musique et pluie de boules disco. 2. Taper « ipaas » : air « Super Plug » (voir la remarque plus haut). 3. 10 clics rapides sur le logo : pluie de foulards, sacs, rouges à lèvres. 4. Lancer Plug : badge final si les 4 sont trouvés. Les indices sont dans 🏅
+🤾 Plug déplaçable	Rester appuyé sur Plug (ou le faire glisser) le décroche de sa place. On peut le déplacer puis le lancer : il rebondit sur les bords de l'écran avec un petit son, puis revient seul à sa place. On peut aussi le rattraper en plein vol
+📜 Certificat deluxe	Titre doré, ornements, deux Plug, ruban de mention, sceau brillant, note sur 20, bonus des secrets, record de l'arcade, rangée des badges obtenus et une phrase selon le style de jeu (par exemple « Rapide comme une API ⚡ »)
