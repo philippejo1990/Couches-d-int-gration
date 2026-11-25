@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz – Animateur</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
+    button { font-size: 1.1rem; padding: .6rem 1.2rem; cursor: pointer; }
+    .pin { font-size: 3rem; font-weight: bold; letter-spacing: .3rem; }
+    .error { color: #c00; }
+    .choices { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; padding: 0; list-style: none; }
+    .choices li { color: #fff; padding: 1rem; border-radius: 8px; font-size: 1.3rem; }
+    .choices li.dim { opacity: .25; }
+    #playerList li button { margin-left: .5rem; padding: 0 .4rem; font-size: .8rem; }
+    #status { color: #666; font-size: .9rem; }
+  </style>
+</head>
+<body>
+  <h1>🎤 Écran animateur</h1>
+
+  <section id="setupView">
+    <p>Questions : <strong id="qSource"></strong></p>
+    <label>Charger mes questions depuis mon PC (.json, optionnel) :
+      <input type="file" id="fileInput" accept=".json,application/json">
+    </label>
+    <p><button id="createBtn">Créer une partie</button></p>
+    <p id="setupError" class="error"></p>
+  </section>
+
+  <section id="lobbyView" hidden>
+    <p>Code de la partie : <span id="pin" class="pin"></span></p>
+    <p>Les joueurs vont sur : <a id="joinUrl" target="_blank"></a></p>
+    <h3>Joueurs (<span id="count">0</span>)</h3>
+    <ul id="playerList"></ul>
+    <button id="startBtn" disabled>▶️ Démarrer</button>
+  </section>
+
+  <section id="questionView" hidden>
+    <p id="qProgress"></p>
+    <h2 id="qText"></h2>
+    <ul id="qChoices" class="choices"></ul>
+    <p>Réponses : <strong id="answerCount">0</strong> / <span id="playerCount">0</span>
+       · ⏱ <strong id="timer"></strong> s</p>
+    <button id="revealBtn">Révéler maintenant</button>
+  </section>
+
+  <section id="leaderboardView" hidden>
+    <h2 id="lbTitle"></h2>
+    <ul id="revealChoices" class="choices"></ul>
+    <ol id="leaderboard"></ol>
+    <button id="nextBtn">Question suivante ➡️</button>
+  </section>
+
+  <p id="status"></p>
+  <script type="module" src="host.js"></script>
+</body>
+</html>
