@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz – Joueur</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 500px; margin: 1.5rem auto; padding: 0 1rem; text-align: center; }
+    input, button { font-size: 1.2rem; padding: .7rem; width: 100%; box-sizing: border-box; margin: .4rem 0; }
+    .choice { color: #fff; border: none; border-radius: 8px; padding: 1.2rem; text-align: left; cursor: pointer; }
+    .error { color: #c00; }
+    .big { font-size: 3rem; margin: .5rem 0; }
+    #footer { color: #666; margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <section id="joinView">
+    <h1>Rejoindre le quiz</h1>
+    <input id="pinInput" placeholder="Code à 6 chiffres" inputmode="numeric" maxlength="6">
+    <input id="nameInput" placeholder="Ton pseudo" maxlength="20">
+    <button id="joinBtn">Rejoindre</button>
+    <p id="joinError" class="error"></p>
+  </section>
+
+  <section id="waitView" hidden>
+    <p class="big">⏳</p>
+    <p id="waitMsg"></p>
+  </section>
+
+  <section id="questionView" hidden>
+    <p id="qProgress"></p>
+    <h2 id="qText"></h2>
+    <p>⏱ <strong id="timer"></strong> s</p>
+    <div id="choices"></div>
+    <p id="answerError" class="error"></p>
+  </section>
+
+  <section id="resultView" hidden>
+    <p id="resultIcon" class="big"></p>
+    <h2 id="resultMsg"></h2>
+    <p id="scoreMsg"></p>
+  </section>
+
+  <p id="footer"></p>
+  <script type="module" src="play.js"></script>
+</body>
+</html>
